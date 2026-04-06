@@ -6,21 +6,21 @@ const Contact = () => {
   return (
     <div className="contact-page animate-fade-in pad-y">
       <div className="container">
-        
+
         <div className="page-header">
           <div className="badge">Get In Touch</div>
-          <h1 className="section-title">Contact <span className="text-gradient">NovaSolar</span></h1>
+          <h1 className="section-title">Contact <span className="text-gradient">SolarEnergy</span></h1>
           <p className="page-subtitle">
             Ready to transition to solar or have questions about our products? Our energy experts are here to help you every step of the way.
           </p>
         </div>
 
         <div className="contact-wrapper">
-          
+
           <div className="contact-info-panel">
             <h3>Contact Information</h3>
             <p>Fill out the form and our team will get back to you within 24 hours.</p>
-            
+
             <div className="contact-details">
               <div className="contact-detail-item">
                 <Phone className="detail-icon" size={24} />
@@ -33,14 +33,14 @@ const Contact = () => {
                 <Mail className="detail-icon" size={24} />
                 <div>
                   <h4>Email</h4>
-                  <p>hello@novasolar.com</p>
+                  <p>hello@solarenergy.com</p>
                 </div>
               </div>
               <div className="contact-detail-item">
                 <MapPin className="detail-icon" size={24} />
                 <div>
                   <h4>Headquarters</h4>
-                  <p>123 Solar Blvd, Tech District<br/>California, CA 90210</p>
+                  <p>123 Solar Blvd, Tech District<br />California, CA 90210</p>
                 </div>
               </div>
             </div>
@@ -60,7 +60,7 @@ const Contact = () => {
                   <input type="text" id="lastName" placeholder="Doe" />
                 </div>
               </div>
-              
+
               <div className="form-group-row">
                 <div className="form-group">
                   <label htmlFor="email">Email</label>
@@ -71,7 +71,7 @@ const Contact = () => {
                   <input type="tel" id="phone" placeholder="(555) 000-0000" />
                 </div>
               </div>
-              
+
               <div className="form-group">
                 <label>Interested In</label>
                 <div className="radio-group">
@@ -93,7 +93,7 @@ const Contact = () => {
               </div>
 
               <button className="btn btn-primary submit-btn">
-                Send Message <Send size={18} style={{marginLeft: '0.5rem'}} />
+                Send Message <Send size={18} style={{ marginLeft: '0.5rem' }} />
               </button>
             </form>
           </div>

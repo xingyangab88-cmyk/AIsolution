@@ -6,15 +6,15 @@ const About = () => {
   return (
     <div className="about-page animate-fade-in pad-y">
       <div className="container">
-        
+
         <div className="about-hero">
           <div className="about-hero-text">
             <div className="badge">Our Story</div>
-            <h1 className="section-title" style={{textAlign: 'left', marginBottom: '1.5rem'}}>
+            <h1 className="section-title" style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
               Pioneering a <span className="text-gradient">Brighter</span> Future
             </h1>
             <p className="about-lead">
-              Founded in 2026, NovaSolar began with a simple mission: to make clean, renewable energy accessible and aesthetically pleasing for everyone. We believe that transitioning to solar shouldn't just be an environmental choice, but a lifestyle upgrade.
+              Founded in 2026, Solar began with a simple mission: to make clean, renewable energy accessible and aesthetically pleasing for everyone. We believe that transitioning to solar shouldn't just be an environmental choice, but a lifestyle upgrade.
             </p>
             <p className="about-desc">
               Our team of expert engineers and designers work tirelessly to bring state-of-the-art solar technology to homes and businesses across the globe, ensuring maximum efficiency without compromising on modern design principles.

@@ -49,7 +49,7 @@ const Home = () => {
       {/* Features Section */}
       <section className="features pad-y">
         <div className="container">
-          <h2 className="section-title">Why Choose <span className="text-gradient">NovaSolar</span></h2>
+          <h2 className="section-title">Why Choose <span className="text-gradient">Solar</span></h2>
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon-wrapper">
