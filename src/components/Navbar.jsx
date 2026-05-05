@@ -19,7 +19,7 @@ const Navbar = () => {
       <div className="container nav-container">
         <Link to="/" className="nav-logo" onClick={closeMenu}>
           <Sun className="logo-icon" size={32} />
-          <span>Solar<span className="text-gradient">Energy</span></span>
+          <span>solar<span className="text-gradient">khmer</span></span>
         </Link>
 
         <div className="menu-icon" onClick={toggleMenu}>

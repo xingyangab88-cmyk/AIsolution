@@ -9,7 +9,7 @@ const Contact = () => {
 
         <div className="page-header">
           <div className="badge">Get In Touch</div>
-          <h1 className="section-title">Contact <span className="text-gradient">SolarEnergy</span></h1>
+          <h1 className="section-title">Contact <span className="text-gradient">solarkhmer</span></h1>
           <p className="page-subtitle">
             Ready to transition to solar or have questions about our products? Our energy experts are here to help you every step of the way.
           </p>

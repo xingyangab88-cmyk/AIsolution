@@ -9,10 +9,10 @@ const Footer = () => {
         <div className="footer-col">
           <Link to="/" className="footer-logo">
             <Sun className="logo-icon" size={28} />
-            <span>Solar<span className="text-gradient">Energy</span></span>
+            <span>solar<span className="text-gradient">khmer</span></span>
           </Link>
           <p className="footer-desc">
-            Empowering a sustainable future with cutting-edge solar technology. Premium solutions for homes and businesses.
+            solarkhmer helps users manage solar energy workflows with clear tools for clean energy planning and productivity.
           </p>
           <div className="social-links">
             <a href="#" className="social-icon"><Globe size={20} /></a>
@@ -64,7 +64,7 @@ const Footer = () => {
 
       <div className="footer-bottom">
         <div className="container">
-          <p>&copy; {new Date().getFullYear()} Solar Energy. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} solarkhmer. All rights reserved.</p>
         </div>
       </div>
     </footer>
