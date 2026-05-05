@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Sun, Mail, Phone, MapPin, Globe, MessageCircle, Share2, Link as LinkIcon } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, MessageCircle, Share2, Link as LinkIcon } from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => {
@@ -8,7 +8,7 @@ const Footer = () => {
       <div className="container footer-container">
         <div className="footer-col">
           <Link to="/" className="footer-logo">
-            <Sun className="logo-icon" size={28} />
+            <img src="/favicon.svg" alt="" className="brand-icon" />
             <span>solar<span className="text-gradient">khmer</span></span>
           </Link>
           <p className="footer-desc">

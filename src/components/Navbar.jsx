@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Sun, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -18,7 +18,7 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="container nav-container">
         <Link to="/" className="nav-logo" onClick={closeMenu}>
-          <Sun className="logo-icon" size={32} />
+          <img src="/favicon.svg" alt="" className="brand-icon" />
           <span>solar<span className="text-gradient">khmer</span></span>
         </Link>
 
