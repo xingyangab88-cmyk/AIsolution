@@ -10,8 +10,17 @@ const steps = [
   'solarkhmer displays basic profile data',
 ];
 
+const TIKTOK_CLIENT_KEY = 'sbaw777avskqma5t3i';
+const REDIRECT_URI = 'https://solarkhmer.vercel.app/callback';
+const tiktokAuthorizeUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${TIKTOK_CLIENT_KEY}&scope=user.info.basic&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=solarkhmer_sandbox_test`;
+
 const TikTokDemo = () => {
   const [signedIn, setSignedIn] = useState(false);
+
+  const startTikTokLogin = () => {
+    setSignedIn(true);
+    window.location.href = tiktokAuthorizeUrl;
+  };
 
   return (
     <div className="demo-page animate-fade-in pad-y">
@@ -36,7 +45,7 @@ const TikTokDemo = () => {
             <p className="panel-copy">
               A solarkhmer user signs in with TikTok before viewing their solar energy dashboard.
             </p>
-            <button className="tiktok-button" onClick={() => setSignedIn(true)}>
+            <button className="tiktok-button" onClick={startTikTokLogin}>
               <span className="tiktok-mark">♪</span>
               Continue with TikTok
             </button>
