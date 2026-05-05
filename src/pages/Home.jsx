@@ -24,6 +24,9 @@ const Home = () => {
               <Link to="/contact" className="btn btn-outline">
                 Get a Free Quote
               </Link>
+              <Link to="/tiktok-demo" className="btn btn-outline">
+                TikTok Demo
+              </Link>
             </div>
           </div>
           <div className="hero-image-wrapper">
