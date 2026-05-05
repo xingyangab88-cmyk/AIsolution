@@ -11,11 +11,11 @@ const Terms = () => {
 
         <div style={{ color: 'var(--text-muted)', lineHeight: '1.8', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <p><strong>Last Updated: {new Date().toLocaleDateString()}</strong></p>
-          <p>These Terms of Service apply to solarkhmer, available at https://a-isolution.vercel.app/.</p>
+          <p>These Terms of Service apply to solarkhmer, available at https://solarkhmer.vercel.app/.</p>
 
           <section>
             <h3 style={{ color: '#fff', marginBottom: '0.5rem' }}>1. Acceptance of Terms</h3>
-            <p>By accessing and using solarkhmer at https://a-isolution.vercel.app/, you accept and agree to be bound by these Terms of Service. When using solarkhmer services, you may also be subject to posted guidelines or rules applicable to those services.</p>
+            <p>By accessing and using solarkhmer at https://solarkhmer.vercel.app/, you accept and agree to be bound by these Terms of Service. When using solarkhmer services, you may also be subject to posted guidelines or rules applicable to those services.</p>
           </section>
 
           <section>
@@ -35,7 +35,7 @@ const Terms = () => {
 
           <section>
             <h3 style={{ color: '#fff', marginBottom: '0.5rem' }}>5. Contact Us</h3>
-            <p>If you have any questions about these Terms for solarkhmer, please contact us through https://a-isolution.vercel.app/contact.</p>
+            <p>If you have any questions about these Terms for solarkhmer, please contact us through https://solarkhmer.vercel.app/contact.</p>
           </section>
         </div>
       </div>

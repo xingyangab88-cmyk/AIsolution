@@ -11,7 +11,7 @@ const Privacy = () => {
 
         <div style={{ color: 'var(--text-muted)', lineHeight: '1.8', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <p><strong>Last Updated: {new Date().toLocaleDateString()}</strong></p>
-          <p>This Privacy Policy applies to solarkhmer, available at https://a-isolution.vercel.app/.</p>
+          <p>This Privacy Policy applies to solarkhmer, available at https://solarkhmer.vercel.app/.</p>
 
           <section>
             <h3 style={{ color: '#fff', marginBottom: '0.5rem' }}>1. Information We Collect</h3>
@@ -40,7 +40,7 @@ const Privacy = () => {
 
           <section>
             <h3 style={{ color: '#fff', marginBottom: '0.5rem' }}>6. Contact Us</h3>
-            <p>If you have any questions about this Privacy Policy for solarkhmer, please contact us through https://a-isolution.vercel.app/contact.</p>
+            <p>If you have any questions about this Privacy Policy for solarkhmer, please contact us through https://solarkhmer.vercel.app/contact.</p>
           </section>
         </div>
       </div>
