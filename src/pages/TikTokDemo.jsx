@@ -92,6 +92,25 @@ const TikTokDemo = () => {
     setCreatorStatus('TikTok account loaded. Choose privacy before posting.');
   }, []);
 
+  const disconnectTikTok = async () => {
+    await fetch('/api/tiktok-logout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    setSignedIn(false);
+    setCreatorInfo(null);
+    setSelectedPrivacy('');
+    setDraftSent(false);
+    setPublishSent(false);
+    setPostingStatus('');
+    setPostingError('');
+    setCreatorError('');
+    setCreatorStatus('TikTok session cleared. Connect again to authorize another account.');
+  };
+
   useEffect(() => {
     const sessionTimer = window.setTimeout(checkTikTokSession, 0);
     return () => window.clearTimeout(sessionTimer);
@@ -309,14 +328,24 @@ const TikTokDemo = () => {
               <li><CheckCircle2 size={18} /> video.publish posts user-approved solar content through TikTok.</li>
             </ul>
           </div>
-          <button
-            className="secondary-button"
-            type="button"
-            disabled={!signedIn}
-            onClick={loadCreatorInfo}
-          >
-            Refresh TikTok Account
-          </button>
+          <div className="profile-actions">
+            <button
+              className="secondary-button"
+              type="button"
+              disabled={!signedIn}
+              onClick={loadCreatorInfo}
+            >
+              Refresh TikTok Account
+            </button>
+            <button
+              className="secondary-button danger"
+              type="button"
+              disabled={!signedIn}
+              onClick={disconnectTikTok}
+            >
+              Disconnect TikTok
+            </button>
+          </div>
           {creatorStatus && <div className="api-status active">{creatorStatus}</div>}
           {creatorError && <div className="api-status error">{creatorError}</div>}
         </div>
