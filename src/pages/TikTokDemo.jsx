@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  AlertCircle,
   CheckCircle2,
   CircleUserRound,
   ExternalLink,
@@ -8,6 +9,7 @@ import {
   KeyRound,
   Send,
   ShieldCheck,
+  UploadCloud,
 } from 'lucide-react';
 import './TikTokDemo.css';
 
@@ -24,18 +26,175 @@ const TIKTOK_CLIENT_KEY = 'sbaw777avskqma5t3i';
 const REDIRECT_URI = 'https://solarkhmer.vercel.app/callback';
 const requestedScopes = 'user.info.basic,video.upload,video.publish';
 const tiktokAuthorizeUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${TIKTOK_CLIENT_KEY}&scope=${requestedScopes}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=solarkhmer_sandbox_test`;
+const privacyLabels = {
+  PUBLIC_TO_EVERYONE: 'Public',
+  MUTUAL_FOLLOW_FRIENDS: 'Friends',
+  FOLLOWER_OF_CREATOR: 'Followers',
+  SELF_ONLY: 'Only me',
+};
 
 const TikTokDemo = () => {
-  const [signedIn, setSignedIn] = useState(false);
-  const [videoReady, setVideoReady] = useState(false);
+  const authParams = useMemo(() => new URLSearchParams(window.location.search), []);
+  const [signedIn, setSignedIn] = useState(authParams.get('auth') === 'success');
+  const [creatorInfo, setCreatorInfo] = useState(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [creatorStatus, setCreatorStatus] = useState('');
+  const [creatorError, setCreatorError] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [transferMethod, setTransferMethod] = useState('FILE_UPLOAD');
+  const [caption, setCaption] = useState('SolarKhmer service update: weekly solar panel maintenance and energy check.');
+  const [selectedPrivacy, setSelectedPrivacy] = useState('');
   const [draftSent, setDraftSent] = useState(false);
   const [publishSent, setPublishSent] = useState(false);
   const [shareSent, setShareSent] = useState(false);
+  const [postingStatus, setPostingStatus] = useState('');
+  const [postingError, setPostingError] = useState('');
 
   const startTikTokLogin = () => {
     setSignedIn(true);
     window.location.href = tiktokAuthorizeUrl;
   };
+
+  const checkTikTokSession = useCallback(async () => {
+    const sessionResponse = await fetch('/api/tiktok-session', {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+    const sessionData = await sessionResponse.json();
+
+    if (sessionResponse.ok && sessionData.authenticated) {
+      setSignedIn(true);
+    }
+
+    setSessionChecked(true);
+  }, []);
+
+  const loadCreatorInfo = useCallback(async () => {
+    setCreatorStatus('Loading TikTok creator information...');
+    setCreatorError('');
+
+    const creatorResponse = await fetch('/api/tiktok-creator', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const creatorData = await creatorResponse.json();
+
+    if (!creatorResponse.ok || !creatorData.ok) {
+      setCreatorStatus('');
+      setCreatorError(creatorData.message || creatorData.error || 'TikTok creator info failed');
+      return;
+    }
+
+    setCreatorInfo(creatorData.creator);
+    setSelectedPrivacy('');
+    setCreatorStatus('TikTok account loaded. Choose privacy before posting.');
+  }, []);
+
+  useEffect(() => {
+    const sessionTimer = window.setTimeout(checkTikTokSession, 0);
+    return () => window.clearTimeout(sessionTimer);
+  }, [checkTikTokSession]);
+
+  useEffect(() => {
+    if (sessionChecked && signedIn) {
+      const loadTimer = window.setTimeout(loadCreatorInfo, 0);
+      return () => window.clearTimeout(loadTimer);
+    }
+    return undefined;
+  }, [loadCreatorInfo, sessionChecked, signedIn]);
+
+  const uploadSelectedFile = async (uploadUrl) => {
+    if (!selectedFile) {
+      return;
+    }
+
+    setPostingStatus('Uploading selected video file to TikTok...');
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': selectedFile.type || 'video/mp4',
+        'Content-Range': `bytes 0-${selectedFile.size - 1}/${selectedFile.size}`,
+      },
+      body: selectedFile,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error(`TikTok file upload failed with HTTP ${uploadResponse.status}`);
+    }
+  };
+
+  const submitTikTokPost = async (mode) => {
+    setPostingStatus('Sending request to TikTok sandbox...');
+    setPostingError('');
+    const usesFileUpload = transferMethod === 'FILE_UPLOAD';
+
+    const postResponse = await fetch('/api/tiktok-post', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        mode,
+        title: caption,
+        source: transferMethod,
+        videoUrl: usesFileUpload ? undefined : videoUrl,
+        videoSize: usesFileUpload ? selectedFile?.size : undefined,
+        privacyLevel: selectedPrivacy,
+      }),
+    });
+    const postData = await postResponse.json();
+
+    if (!postResponse.ok || !postData.ok) {
+      setPostingStatus('');
+      setPostingError(postData.message || postData.error || 'TikTok post request failed');
+      return;
+    }
+
+    if (usesFileUpload && postData.upload_url) {
+      try {
+        await uploadSelectedFile(postData.upload_url);
+      } catch (error) {
+        setPostingStatus('');
+        setPostingError(error.message);
+        return;
+      }
+    }
+
+    if (mode === 'draft') {
+      setDraftSent(true);
+    } else {
+      setPublishSent(true);
+    }
+
+    setPostingStatus(`${postData.message}. publish_id: ${postData.publish_id}`);
+  };
+
+  const canSubmit =
+    signedIn &&
+    creatorInfo &&
+    selectedPrivacy &&
+    ((transferMethod === 'FILE_UPLOAD' && selectedFile) ||
+      (transferMethod === 'PULL_FROM_URL' && videoUrl));
+  const selectedVideoReady =
+    (transferMethod === 'FILE_UPLOAD' && selectedFile) ||
+    (transferMethod === 'PULL_FROM_URL' && videoUrl);
+  const pendingPostRequirement = !signedIn
+    ? 'Connect TikTok first, then return to this post screen.'
+    : !creatorInfo
+      ? 'Load the TikTok account before posting.'
+      : !selectedPrivacy
+        ? 'Choose a TikTok privacy option before posting.'
+        : !selectedVideoReady
+          ? transferMethod === 'FILE_UPLOAD'
+            ? 'Choose a video file before posting.'
+            : 'Enter a verified public video URL before posting.'
+          : '';
 
   return (
     <div className="demo-page animate-fade-in pad-y">
@@ -107,11 +266,21 @@ const TikTokDemo = () => {
           </div>
           <div className="profile-grid">
             <div className="profile-card">
-              <div className="avatar">TK</div>
+              {creatorInfo?.creator_avatar_url ? (
+                <img className="avatar" src={creatorInfo.creator_avatar_url} alt="" />
+              ) : (
+                <div className="avatar">TK</div>
+              )}
               <div>
                 <span>{signedIn ? 'Signed in with TikTok' : 'Waiting for TikTok sign-in'}</span>
-                <h3>{signedIn ? 'TikTok User' : 'Guest User'}</h3>
-                <p>Solar dashboard profile</p>
+                <h3>{creatorInfo?.creator_nickname || (signedIn ? 'TikTok User' : 'Guest User')}</h3>
+                <p>
+                  {creatorInfo?.creator_username
+                    ? `@${creatorInfo.creator_username}`
+                    : signedIn
+                      ? 'Authorized for sandbox posting'
+                      : 'Solar dashboard profile'}
+                </p>
               </div>
             </div>
             <ul className="scope-list">
@@ -122,6 +291,16 @@ const TikTokDemo = () => {
               <li><CheckCircle2 size={18} /> video.publish posts user-approved solar content through TikTok.</li>
             </ul>
           </div>
+          <button
+            className="secondary-button"
+            type="button"
+            disabled={!signedIn}
+            onClick={loadCreatorInfo}
+          >
+            Refresh TikTok Account
+          </button>
+          {creatorStatus && <div className="api-status active">{creatorStatus}</div>}
+          {creatorError && <div className="api-status error">{creatorError}</div>}
         </div>
 
         <div className="posting-panel">
@@ -130,28 +309,96 @@ const TikTokDemo = () => {
             Content Posting API: video.upload and video.publish
           </div>
           <p className="panel-copy">
-            This mockup demonstrates the upload and publishing flow requested for review. The user
-            selects a solar project video, adds a caption, and chooses whether to create a TikTok
-            draft or submit the approved post to TikTok.
+            The user selects a solar project video, enters the caption, manually chooses a TikTok
+            privacy option returned by creator_info, and clicks the final button to consent.
           </p>
+          {!signedIn && (
+            <div className="connection-warning">
+              <AlertCircle size={18} />
+              <span>Connect TikTok before sending a draft or publishing a video.</span>
+              <button type="button" onClick={startTikTokLogin}>
+                Continue with TikTok
+              </button>
+            </div>
+          )}
 
           <div className="upload-workflow">
             <div className="video-preview">
               <div className="video-frame">
-                <FileVideo size={44} />
-                <span>solar-panel-cleaning.mp4</span>
+                <UploadCloud size={44} />
+                <span>{selectedFile?.name || 'Select solar project video'}</span>
               </div>
-              <button className="secondary-button" type="button" onClick={() => setVideoReady(true)}>
-                Choose demo video
-              </button>
+              <div className="method-toggle" aria-label="Video transfer method">
+                <button
+                  type="button"
+                  className={transferMethod === 'FILE_UPLOAD' ? 'active' : ''}
+                  onClick={() => setTransferMethod('FILE_UPLOAD')}
+                >
+                  File upload
+                </button>
+                <button
+                  type="button"
+                  className={transferMethod === 'PULL_FROM_URL' ? 'active' : ''}
+                  onClick={() => setTransferMethod('PULL_FROM_URL')}
+                >
+                  URL pull
+                </button>
+              </div>
+              {transferMethod === 'FILE_UPLOAD' ? (
+                <>
+                  <label htmlFor="video-file">Video file</label>
+                  <input
+                    id="video-file"
+                    type="file"
+                    accept="video/mp4,video/quicktime,video/webm"
+                    onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
+                  />
+                </>
+              ) : (
+                <>
+                  <label htmlFor="video-url">Public video URL</label>
+                  <input
+                    id="video-url"
+                    type="url"
+                    value={videoUrl}
+                    onChange={(event) => setVideoUrl(event.target.value)}
+                    placeholder="https://your-verified-domain.com/video.mp4"
+                  />
+                </>
+              )}
+              <div className="audit-note">
+                <AlertCircle size={18} />
+                URL pull requires verified domain ownership. File upload returns an upload_url.
+              </div>
             </div>
 
             <div className="upload-details">
               <label htmlFor="demo-caption">Caption</label>
               <textarea
                 id="demo-caption"
-                defaultValue="SolarKhmer service update: weekly solar panel maintenance and energy check."
+                value={caption}
+                onChange={(event) => setCaption(event.target.value)}
               />
+              <div className="privacy-options">
+                <span>Choose TikTok privacy</span>
+                {(creatorInfo?.privacy_level_options || ['SELF_ONLY']).map((privacyOption) => (
+                  <label key={privacyOption} className="privacy-option">
+                    <input
+                      type="radio"
+                      name="privacy-level"
+                      value={privacyOption}
+                      checked={selectedPrivacy === privacyOption}
+                      onChange={(event) => setSelectedPrivacy(event.target.value)}
+                    />
+                    {privacyLabels[privacyOption] || privacyOption}
+                    <small>{privacyOption}</small>
+                  </label>
+                ))}
+              </div>
+              <div className="audit-note">
+                <AlertCircle size={18} />
+                Until TikTok approves Direct Post audit, choose Only me / SELF_ONLY for live tests.
+              </div>
               <div className="scope-note">
                 <CheckCircle2 size={18} />
                 Scope used: video.upload creates a TikTok draft for final editing in TikTok.
@@ -159,8 +406,8 @@ const TikTokDemo = () => {
               <button
                 className="send-button"
                 type="button"
-                disabled={!videoReady}
-                onClick={() => setDraftSent(true)}
+                disabled={!canSubmit}
+                onClick={() => submitTikTokPost('draft')}
               >
                 <Send size={18} />
                 Send to TikTok Draft
@@ -168,27 +415,39 @@ const TikTokDemo = () => {
               <div className={draftSent ? 'draft-status active' : 'draft-status'}>
                 {draftSent
                   ? 'Draft sent to TikTok. User reviews, edits, and completes posting in TikTok.'
-                  : 'Choose a demo video first, then send it as a TikTok draft.'}
+                  : pendingPostRequirement || 'Ready to send this video as a TikTok draft.'}
               </div>
 
               <div className="scope-note publish-note">
                 <CheckCircle2 size={18} />
-                Scope used: video.publish submits user-approved content to TikTok.
+                Scope used: video.publish submits user-approved content with SELF_ONLY privacy.
               </div>
               <button
                 className="publish-button"
                 type="button"
-                disabled={!videoReady}
-                onClick={() => setPublishSent(true)}
+                disabled={!canSubmit}
+                onClick={() => submitTikTokPost('publish')}
               >
                 <Send size={18} />
-                Publish Approved Video
+                Publish Selected Privacy
               </button>
               <div className={publishSent ? 'draft-status active' : 'draft-status'}>
                 {publishSent
-                  ? 'Approved video submitted to TikTok through the Content Posting API.'
-                  : 'Choose a demo video first, then publish the approved TikTok post.'}
+                  ? 'Approved SELF_ONLY video submitted to TikTok through the Content Posting API.'
+                  : pendingPostRequirement || 'Ready to publish with the selected privacy.'}
               </div>
+              {postingStatus && <div className="api-status active">{postingStatus}</div>}
+              {postingError && <div className="api-status error">{postingError}</div>}
+              {publishSent && (
+                <a
+                  className="profile-link"
+                  href="https://www.tiktok.com/profile"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open TikTok profile
+                </a>
+              )}
             </div>
           </div>
         </div>
