@@ -34,7 +34,7 @@ export default async function handler(request, response) {
     ? TIKTOK_SANDBOX_CLIENT_KEY
     : process.env.TIKTOK_CLIENT_KEY;
   const clientSecret = isSandbox
-    ? process.env.TIKTOK_SANDBOX_CLIENT_SECRET || process.env.TIKTOK_CLIENT_SECRET
+    ? process.env.TIKTOK_SANDBOX_CLIENT_SECRET
     : process.env.TIKTOK_CLIENT_SECRET;
 
   if (!clientKey || !clientSecret) {
