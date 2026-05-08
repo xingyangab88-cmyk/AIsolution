@@ -26,6 +26,7 @@ const TIKTOK_CLIENT_KEY = 'sbaw777avskqma5t3i';
 const REDIRECT_URI = 'https://solarkhmer.vercel.app/callback';
 const requestedScopes = 'user.info.basic,video.upload,video.publish';
 const tiktokAuthorizeUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${TIKTOK_CLIENT_KEY}&scope=${requestedScopes}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=solarkhmer_sandbox_test`;
+const publicPostingEnabled = false;
 const privacyLabels = {
   PUBLIC_TO_EVERYONE: 'Public',
   MUTUAL_FOLLOW_FRIENDS: 'Friends',
@@ -134,6 +135,12 @@ const TikTokDemo = () => {
     setPostingError('');
     const usesFileUpload = transferMethod === 'FILE_UPLOAD';
 
+    if (mode === 'publish' && !publicPostingEnabled && selectedPrivacy !== 'SELF_ONLY') {
+      setPostingStatus('');
+      setPostingError('Public and Friends posting require TikTok Direct Post audit approval. Choose Only me / SELF_ONLY for live testing.');
+      return;
+    }
+
     const postResponse = await fetch('/api/tiktok-post', {
       method: 'POST',
       headers: {
@@ -175,26 +182,41 @@ const TikTokDemo = () => {
     setPostingStatus(`${postData.message}. publish_id: ${postData.publish_id}`);
   };
 
-  const canSubmit =
+  const hasSelectedVideo =
+    (transferMethod === 'FILE_UPLOAD' && selectedFile) ||
+    (transferMethod === 'PULL_FROM_URL' && videoUrl);
+  const canSendDraft =
+    signedIn &&
+    creatorInfo &&
+    hasSelectedVideo;
+  const canPublish =
     signedIn &&
     creatorInfo &&
     selectedPrivacy &&
-    ((transferMethod === 'FILE_UPLOAD' && selectedFile) ||
-      (transferMethod === 'PULL_FROM_URL' && videoUrl));
-  const selectedVideoReady =
-    (transferMethod === 'FILE_UPLOAD' && selectedFile) ||
-    (transferMethod === 'PULL_FROM_URL' && videoUrl);
-  const pendingPostRequirement = !signedIn
+    hasSelectedVideo &&
+    (publicPostingEnabled || selectedPrivacy === 'SELF_ONLY');
+  const pendingDraftRequirement = !signedIn
+    ? 'Connect TikTok first, then return to this post screen.'
+    : !creatorInfo
+      ? 'Load the TikTok account before posting.'
+      : !hasSelectedVideo
+        ? transferMethod === 'FILE_UPLOAD'
+          ? 'Choose a video file before posting.'
+          : 'Enter a verified public video URL before posting.'
+        : '';
+  const pendingPublishRequirement = !signedIn
     ? 'Connect TikTok first, then return to this post screen.'
     : !creatorInfo
       ? 'Load the TikTok account before posting.'
       : !selectedPrivacy
-        ? 'Choose a TikTok privacy option before posting.'
-        : !selectedVideoReady
+        ? 'Choose a TikTok privacy option before publishing.'
+        : !hasSelectedVideo
           ? transferMethod === 'FILE_UPLOAD'
             ? 'Choose a video file before posting.'
             : 'Enter a verified public video URL before posting.'
-          : '';
+          : !publicPostingEnabled && selectedPrivacy !== 'SELF_ONLY'
+            ? 'Choose Only me / SELF_ONLY. Public and Friends require TikTok audit approval.'
+            : '';
 
   return (
     <div className="demo-page animate-fade-in pad-y">
@@ -406,7 +428,7 @@ const TikTokDemo = () => {
               <button
                 className="send-button"
                 type="button"
-                disabled={!canSubmit}
+                disabled={!canSendDraft}
                 onClick={() => submitTikTokPost('draft')}
               >
                 <Send size={18} />
@@ -415,7 +437,7 @@ const TikTokDemo = () => {
               <div className={draftSent ? 'draft-status active' : 'draft-status'}>
                 {draftSent
                   ? 'Draft sent to TikTok. User reviews, edits, and completes posting in TikTok.'
-                  : pendingPostRequirement || 'Ready to send this video as a TikTok draft.'}
+                  : pendingDraftRequirement || 'Ready to send this video as a TikTok draft.'}
               </div>
 
               <div className="scope-note publish-note">
@@ -425,7 +447,7 @@ const TikTokDemo = () => {
               <button
                 className="publish-button"
                 type="button"
-                disabled={!canSubmit}
+                disabled={!canPublish}
                 onClick={() => submitTikTokPost('publish')}
               >
                 <Send size={18} />
@@ -434,7 +456,7 @@ const TikTokDemo = () => {
               <div className={publishSent ? 'draft-status active' : 'draft-status'}>
                 {publishSent
                   ? 'Approved SELF_ONLY video submitted to TikTok through the Content Posting API.'
-                  : pendingPostRequirement || 'Ready to publish with the selected privacy.'}
+                  : pendingPublishRequirement || 'Ready to publish with the selected privacy.'}
               </div>
               {postingStatus && <div className="api-status active">{postingStatus}</div>}
               {postingError && <div className="api-status error">{postingError}</div>}
