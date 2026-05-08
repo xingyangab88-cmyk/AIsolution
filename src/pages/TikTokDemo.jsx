@@ -22,10 +22,6 @@ const steps = [
   'User shares or publishes a solar video to TikTok',
 ];
 
-const TIKTOK_CLIENT_KEY = 'sbaw777avskqma5t3i';
-const REDIRECT_URI = 'https://solarkhmer.vercel.app/callback';
-const requestedScopes = 'user.info.basic,video.upload,video.publish';
-const tiktokAuthorizeUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${TIKTOK_CLIENT_KEY}&scope=${requestedScopes}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=solarkhmer_sandbox_test`;
 const publicPostingEnabled = false;
 const privacyLabels = {
   PUBLIC_TO_EVERYONE: 'Public',
@@ -54,7 +50,7 @@ const TikTokDemo = () => {
 
   const startTikTokLogin = () => {
     setSignedIn(true);
-    window.location.href = tiktokAuthorizeUrl;
+    window.location.href = '/api/tiktok-login';
   };
 
   const checkTikTokSession = useCallback(async () => {
@@ -131,7 +127,7 @@ const TikTokDemo = () => {
   };
 
   const submitTikTokPost = async (mode) => {
-    setPostingStatus('Sending request to TikTok sandbox...');
+    setPostingStatus('Sending request to TikTok...');
     setPostingError('');
     const usesFileUpload = transferMethod === 'FILE_UPLOAD';
 
@@ -222,7 +218,7 @@ const TikTokDemo = () => {
     <div className="demo-page animate-fade-in pad-y">
       <div className="container demo-container">
         <div className="demo-header">
-          <div className="badge">TikTok Sandbox Integration Mockup</div>
+          <div className="badge">TikTok Integration Demo</div>
           <h1 className="section-title">
             solarkhmer <span className="text-gradient">TikTok Integration Demo</span>
           </h1>
@@ -249,7 +245,7 @@ const TikTokDemo = () => {
 
             <div className="auth-box">
               <h3>TikTok Authorization Screen</h3>
-              <p>Sandbox mockup: the user approves TikTok access for solarkhmer.</p>
+              <p>The user approves TikTok access for solarkhmer.</p>
               <div className="permission-row">
                 <ShieldCheck size={18} />
                 Scope requested: user.info.basic
@@ -300,7 +296,7 @@ const TikTokDemo = () => {
                   {creatorInfo?.creator_username
                     ? `@${creatorInfo.creator_username}`
                     : signedIn
-                      ? 'Authorized for sandbox posting'
+                      ? 'Authorized for posting'
                       : 'Solar dashboard profile'}
                 </p>
               </div>

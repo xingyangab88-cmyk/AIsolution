@@ -2,7 +2,6 @@
 
 const TIKTOK_TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
 const REDIRECT_URI = 'https://solarkhmer.vercel.app/callback';
-const TIKTOK_SANDBOX_CLIENT_KEY = 'sbaw777avskqma5t3i';
 
 export default async function handler(request, response) {
   response.setHeader('Cache-Control', 'no-store');
@@ -31,7 +30,7 @@ export default async function handler(request, response) {
 
   const isSandbox = typeof state === 'string' && state.includes('sandbox');
   const clientKey = isSandbox
-    ? TIKTOK_SANDBOX_CLIENT_KEY
+    ? process.env.TIKTOK_SANDBOX_CLIENT_KEY || process.env.TIKTOK_CLIENT_KEY
     : process.env.TIKTOK_CLIENT_KEY;
   const clientSecret = isSandbox
     ? process.env.TIKTOK_SANDBOX_CLIENT_SECRET
