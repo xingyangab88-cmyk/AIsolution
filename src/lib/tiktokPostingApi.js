@@ -55,6 +55,23 @@ const readJsonResponse = async (response) => {
   }
 };
 
+export const fetchTikTokPostStatus = async (publishId) => {
+  const response = await fetch('/api/tiktok-status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ publishId }),
+  });
+  const data = await readJsonResponse(response);
+
+  if (!response.ok || data.ok === false) {
+    throw new Error(data.message || data.error || 'Unable to fetch TikTok post status');
+  }
+
+  return data.status;
+};
+
 export const publishTikTokPost = async ({
   file,
   caption,

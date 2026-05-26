@@ -9,14 +9,13 @@ import {
   Loader2,
   MessageCircle,
   Music2,
-  RefreshCw,
   Send,
   Sparkles,
   UserRound,
 } from 'lucide-react';
 import {
   fetchTikTokCreatorInfo,
-  mockCreatorInfo,
+  fetchTikTokPostStatus,
   publishTikTokPost,
 } from '../lib/tiktokPostingApi';
 import './PostToTikTok.css';
@@ -91,7 +90,11 @@ const CreatorSkeleton = () => (
   </div>
 );
 
-const ConnectedAccount = ({ creatorInfo, loading, error, onConnect, onUseMock }) => (
+const wait = (milliseconds) => new Promise((resolve) => {
+  window.setTimeout(resolve, milliseconds);
+});
+
+const ConnectedAccount = ({ creatorInfo, loading, error, onConnect }) => (
   <Section icon={UserRound} title="Connected account">
     {loading ? (
       <CreatorSkeleton />
@@ -117,14 +120,6 @@ const ConnectedAccount = ({ creatorInfo, loading, error, onConnect, onUseMock })
             <Send size={16} />
             Continue with TikTok
           </button>
-          <button
-            className="tiktok-secondary-small"
-            type="button"
-            onClick={onUseMock}
-          >
-            <RefreshCw size={16} />
-            Use mock data
-          </button>
         </div>
       </div>
     ) : (
@@ -147,14 +142,6 @@ const ConnectedAccount = ({ creatorInfo, loading, error, onConnect, onUseMock })
             <p className="truncate text-slate-300">@{creatorInfo.username}</p>
           </div>
         </div>
-        <button
-          className="tiktok-secondary-small"
-          type="button"
-          onClick={onUseMock}
-        >
-          <RefreshCw size={16} />
-          Use mock data
-        </button>
       </div>
     )}
   </Section>
@@ -361,11 +348,11 @@ const PostToTikTok = () => {
     brandedContent: false,
   });
   const [publishState, setPublishState] = useState('idle');
+  const [publishStatus, setPublishStatus] = useState(null);
   const [toast, setToast] = useState(null);
   const [apiError, setApiError] = useState('');
 
   const mediaType = file?.type?.startsWith('image/') ? 'photo' : 'video';
-  const activeCreatorInfo = creatorInfo || mockCreatorInfo;
 
   useEffect(() => {
     let active = true;
@@ -380,7 +367,7 @@ const PostToTikTok = () => {
           setToast({
             type: 'error',
             title: 'Creator info unavailable',
-            message: 'Connect TikTok first, or use mock data only for a review demo recording.',
+            message: 'Connect TikTok first, then return to this posting screen.',
           });
         }
       })
@@ -408,9 +395,10 @@ const PostToTikTok = () => {
     if (
       mediaType === 'video' &&
       Number.isFinite(duration) &&
-      duration > activeCreatorInfo.max_video_post_duration_sec
+      creatorInfo &&
+      duration > creatorInfo.max_video_post_duration_sec
     ) {
-      errors.duration = `Video duration must be ${activeCreatorInfo.max_video_post_duration_sec} seconds or less.`;
+      errors.duration = `Video duration must be ${creatorInfo.max_video_post_duration_sec} seconds or less.`;
     }
     if (
       disclosure.promotesContent &&
@@ -423,7 +411,7 @@ const PostToTikTok = () => {
       errors.disclosure = 'Branded content visibility cannot be set to private.';
     }
     return errors;
-  }, [activeCreatorInfo.max_video_post_duration_sec, caption, creatorInfo, disclosure, duration, file, mediaType, privacy]);
+  }, [caption, creatorInfo, disclosure, duration, file, mediaType, privacy]);
 
   const canPublish = Object.keys(validation).length === 0 && publishState !== 'uploading' && publishState !== 'processing';
   const consentText = disclosure.brandedContent
@@ -434,16 +422,17 @@ const PostToTikTok = () => {
     if (!canPublish) return;
 
     setPublishState('uploading');
+    setPublishStatus(null);
     setApiError('');
 
     try {
-      await publishTikTokPost({
+      const publishResult = await publishTikTokPost({
         file,
         caption,
         privacyLevel: privacy,
-        allowComments: !activeCreatorInfo.comment_disabled && interactions.allowComments,
-        allowDuet: mediaType === 'video' && !activeCreatorInfo.duet_disabled && interactions.allowDuet,
-        allowStitch: mediaType === 'video' && !activeCreatorInfo.stitch_disabled && interactions.allowStitch,
+        allowComments: !creatorInfo.comment_disabled && interactions.allowComments,
+        allowDuet: mediaType === 'video' && !creatorInfo.duet_disabled && interactions.allowDuet,
+        allowStitch: mediaType === 'video' && !creatorInfo.stitch_disabled && interactions.allowStitch,
         promotesContent: disclosure.promotesContent,
         yourBrand: disclosure.yourBrand,
         brandedContent: disclosure.brandedContent,
@@ -451,14 +440,42 @@ const PostToTikTok = () => {
       });
 
       setPublishState('processing');
-      window.setTimeout(() => {
-        setPublishState('success');
+      setPublishStatus({ status: 'PROCESSING_UPLOAD' });
+
+      if (!publishResult.publish_id) {
         setToast({
           type: 'success',
-          title: 'Successfully posted to TikTok',
+          title: 'Upload submitted to TikTok',
           message: 'It may take a few minutes for your content to process and appear on your TikTok profile.',
         });
-      }, 900);
+        return;
+      }
+
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        await wait(attempt === 0 ? 1800 : 4000);
+        const nextStatus = await fetchTikTokPostStatus(publishResult.publish_id);
+        setPublishStatus(nextStatus);
+
+        if (nextStatus.status === 'PUBLISH_COMPLETE') {
+          setPublishState('success');
+          setToast({
+            type: 'success',
+            title: 'Successfully posted to TikTok',
+            message: 'It may take a few minutes for your content to process and appear on your TikTok profile.',
+          });
+          return;
+        }
+
+        if (nextStatus.status === 'FAILED') {
+          throw new Error(nextStatus.fail_reason || 'TikTok processing failed');
+        }
+      }
+
+      setToast({
+        type: 'success',
+        title: 'TikTok is still processing',
+        message: 'Processing can take a few minutes. The status panel will show the latest state returned by TikTok.',
+      });
     } catch (error) {
       setPublishState('idle');
       setApiError(error.message);
@@ -506,11 +523,6 @@ const PostToTikTok = () => {
               onConnect={() => {
                 window.location.href = '/api/tiktok-login';
               }}
-              onUseMock={() => {
-                setCreatorInfo(mockCreatorInfo);
-                setCreatorLoading(false);
-                setApiError('');
-              }}
             />
             <VideoPreview
               file={file}
@@ -532,7 +544,7 @@ const PostToTikTok = () => {
 
           <aside className="tiktok-side-column">
             <PrivacySelector
-              options={activeCreatorInfo.privacy_level_options}
+              options={creatorInfo?.privacy_level_options || []}
               value={privacy}
               setValue={setPrivacy}
               error={validation.privacy}
@@ -540,7 +552,11 @@ const PostToTikTok = () => {
             />
             <InteractionSettings
               mediaType={mediaType}
-              creatorInfo={activeCreatorInfo}
+              creatorInfo={creatorInfo || {
+                comment_disabled: true,
+                duet_disabled: true,
+                stitch_disabled: true,
+              }}
               interactions={interactions}
               setInteractions={setInteractions}
             />
@@ -571,6 +587,12 @@ const PostToTikTok = () => {
                   <p className="mt-2 text-sm text-slate-300">
                     It may take a few minutes for your content to process and appear on your TikTok profile.
                   </p>
+                  {publishStatus?.status && (
+                    <p className="mt-2 text-sm text-cyan-100">TikTok status: {publishStatus.status}</p>
+                  )}
+                  {publishStatus?.fail_reason && (
+                    <p className="mt-2 text-sm text-red-200">Reason: {publishStatus.fail_reason}</p>
+                  )}
                 </div>
               )}
             </section>
