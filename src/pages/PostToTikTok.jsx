@@ -19,6 +19,7 @@ import {
   mockCreatorInfo,
   publishTikTokPost,
 } from '../lib/tiktokPostingApi';
+import './PostToTikTok.css';
 
 const privacyLabels = {
   PUBLIC_TO_EVERYONE: 'Public',
@@ -38,7 +39,7 @@ const Toast = ({ toast, onClose }) => {
   if (!toast) return null;
 
   return (
-    <div className="fixed right-4 top-24 z-[1000] w-[calc(100%-2rem)] max-w-sm rounded-lg border border-white/10 bg-slate-950/95 p-4 text-sm text-white shadow-2xl shadow-black/40 backdrop-blur md:right-6">
+    <div className="tiktok-toast">
       <div className="flex items-start gap-3">
         <span className={toast.type === 'success' ? 'text-emerald-300' : 'text-red-300'}>
           {toast.type === 'success' ? <Check size={18} /> : <AlertCircle size={18} />}
@@ -56,7 +57,7 @@ const Toast = ({ toast, onClose }) => {
 };
 
 const FieldError = ({ children }) => (
-  <p className="mt-2 flex items-center gap-2 text-sm text-red-300">
+  <p className="tiktok-field-error">
     <AlertCircle size={15} />
     {children}
   </p>
@@ -66,9 +67,9 @@ const Section = ({ icon, title, children }) => {
   const IconComponent = icon;
 
   return (
-  <section className="rounded-lg border border-white/10 bg-white/[0.04] p-5 shadow-xl shadow-black/10 md:p-6">
-    <div className="mb-5 flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-cyan-400/10 text-cyan-200">
+  <section className="tiktok-card">
+    <div className="tiktok-card-title">
+      <div className="tiktok-card-icon">
         <IconComponent size={20} />
       </div>
       <h2 className="text-lg font-semibold text-white">{title}</h2>
@@ -79,10 +80,10 @@ const Section = ({ icon, title, children }) => {
 };
 
 const CreatorSkeleton = () => (
-  <div className="animate-pulse">
+  <div className="animate-pulse tiktok-skeleton">
     <div className="flex items-center gap-4">
       <div className="h-16 w-16 rounded-full bg-white/10" />
-      <div className="flex-1 space-y-3">
+      <div className="tiktok-skeleton-lines">
         <div className="h-4 w-36 rounded bg-white/10" />
         <div className="h-3 w-24 rounded bg-white/10" />
       </div>
@@ -95,7 +96,7 @@ const ConnectedAccount = ({ creatorInfo, loading, error, onConnect, onUseMock })
     {loading ? (
       <CreatorSkeleton />
     ) : !creatorInfo ? (
-      <div className="space-y-4">
+      <div className="tiktok-empty-account">
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-slate-800 text-lg font-bold">
             TK
@@ -109,7 +110,7 @@ const ConnectedAccount = ({ creatorInfo, loading, error, onConnect, onUseMock })
         {error && <FieldError>{error}</FieldError>}
         <div className="flex flex-col gap-3 sm:flex-row">
           <button
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-cyan-300 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-cyan-200"
+            className="tiktok-primary-small"
             type="button"
             onClick={onConnect}
           >
@@ -117,7 +118,7 @@ const ConnectedAccount = ({ creatorInfo, loading, error, onConnect, onUseMock })
             Continue with TikTok
           </button>
           <button
-            className="inline-flex items-center justify-center gap-2 rounded-md border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-300/40 hover:bg-cyan-300/10"
+            className="tiktok-secondary-small"
             type="button"
             onClick={onUseMock}
           >
@@ -127,7 +128,7 @@ const ConnectedAccount = ({ creatorInfo, loading, error, onConnect, onUseMock })
         </div>
       </div>
     ) : (
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="tiktok-account-row">
         <div className="flex min-w-0 items-center gap-4">
           {creatorInfo.avatar_url ? (
             <img
@@ -147,7 +148,7 @@ const ConnectedAccount = ({ creatorInfo, loading, error, onConnect, onUseMock })
           </div>
         </div>
         <button
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-white/10 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-300/40 hover:bg-cyan-300/10"
+          className="tiktok-secondary-small"
           type="button"
           onClick={onUseMock}
         >
@@ -161,37 +162,37 @@ const ConnectedAccount = ({ creatorInfo, loading, error, onConnect, onUseMock })
 
 const VideoPreview = ({ file, previewUrl, duration, durationError, onDurationLoaded, onFileChange, mediaType }) => (
   <Section icon={mediaType === 'photo' ? ImageIcon : FileVideo} title="Media preview">
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
-      <div className="overflow-hidden rounded-lg border border-white/10 bg-black">
+    <div className="tiktok-media-grid">
+      <div className="tiktok-video-shell">
         {previewUrl && mediaType === 'video' && (
           <video
-            className="aspect-video h-full w-full object-contain"
+            className="tiktok-video"
             src={previewUrl}
             controls
             onLoadedMetadata={(event) => onDurationLoaded(event.currentTarget.duration)}
           />
         )}
         {previewUrl && mediaType === 'photo' && (
-          <img className="aspect-video h-full w-full object-contain" src={previewUrl} alt="Selected upload preview" />
+          <img className="tiktok-video" src={previewUrl} alt="Selected upload preview" />
         )}
         {!previewUrl && (
-          <div className="flex aspect-video flex-col items-center justify-center gap-3 text-slate-400">
+          <div className="tiktok-video-empty">
             <FileVideo size={42} />
             <span>Select a video or photo to preview the exact media before posting</span>
           </div>
         )}
       </div>
-      <div className="space-y-4">
+      <div className="tiktok-media-details">
         <label className="block">
           <span className="mb-2 block text-sm font-semibold text-slate-200">Upload media</span>
           <input
-            className="block w-full rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-200 file:mr-3 file:rounded-md file:border-0 file:bg-cyan-300 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-slate-950"
+            className="tiktok-file-input"
             type="file"
             accept="video/mp4,video/quicktime,video/webm,image/jpeg,image/png"
             onChange={onFileChange}
           />
         </label>
-        <div className="rounded-md border border-white/10 bg-slate-950/60 p-4">
+        <div className="tiktok-file-meta">
           <p className="truncate font-semibold text-white">{file?.name || 'No file selected'}</p>
           <p className="mt-2 flex items-center gap-2 text-sm text-slate-300">
             <Clock3 size={16} />
@@ -211,7 +212,7 @@ const CaptionField = ({ caption, setCaption, error }) => (
     </label>
     <textarea
       id="tiktok-caption"
-      className="min-h-36 w-full resize-y rounded-lg border border-white/10 bg-slate-950/70 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/70 focus:ring-4 focus:ring-cyan-300/10"
+      className="tiktok-textarea"
       value={caption}
       onChange={(event) => setCaption(event.target.value)}
       placeholder="Write your caption. Hashtags are allowed."
@@ -228,7 +229,7 @@ const PrivacySelector = ({ options, value, setValue, error }) => (
     </label>
     <select
       id="privacy-level"
-      className="w-full appearance-none rounded-lg border border-white/10 bg-slate-950/70 px-4 py-3 text-base text-white outline-none transition focus:border-cyan-300/70 focus:ring-4 focus:ring-cyan-300/10"
+      className="tiktok-select"
       value={value}
       onChange={(event) => setValue(event.target.value)}
     >
@@ -256,9 +257,7 @@ const InteractionSettings = ({ mediaType, creatorInfo, interactions, setInteract
         {items.map((item) => (
           <label
             key={item.key}
-            className={`flex items-center gap-3 rounded-md border border-white/10 p-3 ${
-              item.disabled ? 'cursor-not-allowed bg-slate-900/70 text-slate-500' : 'bg-slate-950/40 text-slate-200'
-            }`}
+            className={`tiktok-check-row ${item.disabled ? 'is-disabled' : ''}`}
           >
             <input
               className="h-5 w-5 rounded border-white/20 bg-slate-950 text-cyan-300"
@@ -277,7 +276,7 @@ const InteractionSettings = ({ mediaType, creatorInfo, interactions, setInteract
 
 const CommercialDisclosure = ({ disclosure, setDisclosure, error }) => (
   <Section icon={Music2} title="Commercial content disclosure">
-    <label className="flex items-center justify-between gap-4 rounded-lg border border-white/10 bg-slate-950/50 p-4">
+    <label className="tiktok-toggle-row">
       <span className="font-semibold text-white">Does this content promote yourself, a brand, product or service?</span>
       <input
         className="h-6 w-11 rounded-full"
@@ -299,7 +298,7 @@ const CommercialDisclosure = ({ disclosure, setDisclosure, error }) => (
           ['yourBrand', 'Your brand'],
           ['brandedContent', 'Branded content'],
         ].map(([key, label]) => (
-          <label key={key} className="flex items-center gap-3 rounded-md border border-white/10 bg-slate-950/40 p-3 text-slate-200">
+          <label key={key} className="tiktok-check-row">
             <input
               className="h-5 w-5 rounded border-white/20 bg-slate-950 text-cyan-300"
               type="checkbox"
@@ -445,18 +444,18 @@ const PostToTikTok = () => {
         : '';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="tiktok-post-page">
       <Toast toast={toast} onClose={() => setToast(null)} />
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="tiktok-post-container">
+        <header className="tiktok-post-header">
           <div>
-            <p className="mb-2 inline-flex items-center gap-2 rounded-md border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-sm font-semibold text-cyan-100">
+            <p className="tiktok-eyebrow">
               <Send size={15} />
               Creator review
             </p>
             <h1 className="text-3xl font-bold tracking-normal text-white sm:text-4xl">Post to TikTok</h1>
           </div>
-          <div className="rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-slate-300">
+          <div className="tiktok-submit-note">
             Upload begins only after you click <span className="font-semibold text-white">Publish to TikTok</span>.
           </div>
         </header>
@@ -467,8 +466,8 @@ const PostToTikTok = () => {
           </div>
         )}
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
-          <div className="space-y-6">
+        <div className="tiktok-layout">
+          <div className="tiktok-main-column">
             <ConnectedAccount
               creatorInfo={creatorInfo}
               loading={creatorLoading}
@@ -500,7 +499,7 @@ const PostToTikTok = () => {
             <CaptionField caption={caption} setCaption={setCaption} error={validation.caption} />
           </div>
 
-          <aside className="space-y-6">
+          <aside className="tiktok-side-column">
             <PrivacySelector
               options={activeCreatorInfo.privacy_level_options}
               value={privacy}
@@ -519,10 +518,10 @@ const PostToTikTok = () => {
               error={validation.disclosure}
             />
 
-            <section className="rounded-lg border border-white/10 bg-white/[0.04] p-5 shadow-xl shadow-black/10 md:p-6">
+            <section className="tiktok-publish-card">
               <p className="text-sm text-slate-300">{consentText}</p>
               <button
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-300 px-4 py-3 font-bold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+                className="tiktok-publish-button"
                 type="button"
                 disabled={!canPublish}
                 onClick={handlePublish}
@@ -534,7 +533,7 @@ const PostToTikTok = () => {
                 <p className="mt-3 text-sm text-slate-400">Complete the required review choices to enable publishing.</p>
               )}
               {statusText && (
-                <div className="mt-4 rounded-md border border-white/10 bg-slate-950/60 p-4">
+                <div className="tiktok-status-card">
                   <p className="font-semibold text-white">{statusText}</p>
                   <p className="mt-2 text-sm text-slate-300">
                     It may take a few minutes for your content to process and appear on your TikTok profile.
