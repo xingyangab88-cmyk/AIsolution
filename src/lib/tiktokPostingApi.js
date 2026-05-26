@@ -1,14 +1,3 @@
-export const mockCreatorInfo = {
-  nickname: 'Creator Name',
-  username: 'creatorname',
-  avatar_url: 'https://placehold.co/160x160/111827/ffffff?text=TK',
-  privacy_level_options: ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'SELF_ONLY'],
-  comment_disabled: false,
-  duet_disabled: false,
-  stitch_disabled: true,
-  max_video_post_duration_sec: 600,
-};
-
 const normalizeCreatorInfo = (payload) => {
   const data = payload?.creator || payload?.data || payload;
 

@@ -20,6 +20,8 @@ import {
 } from '../lib/tiktokPostingApi';
 import './PostToTikTok.css';
 
+const directPostApproved = import.meta.env.VITE_TIKTOK_DIRECT_POST_APPROVED === 'true';
+
 const privacyLabels = {
   PUBLIC_TO_EVERYONE: 'Public',
   MUTUAL_FOLLOW_FRIENDS: 'Friends',
@@ -147,11 +149,11 @@ const ConnectedAccount = ({ creatorInfo, loading, error, onConnect }) => (
   </Section>
 );
 
-const VideoPreview = ({ file, previewUrl, duration, durationError, onDurationLoaded, onFileChange, mediaType }) => (
-  <Section icon={mediaType === 'photo' ? ImageIcon : FileVideo} title="Media preview">
+const VideoPreview = ({ file, previewUrl, duration, durationError, onDurationLoaded, onFileChange }) => (
+  <Section icon={FileVideo} title="Media preview">
     <div className="tiktok-media-grid">
       <div className="tiktok-video-shell">
-        {previewUrl && mediaType === 'video' && (
+        {previewUrl && (
           <video
             className="tiktok-video"
             src={previewUrl}
@@ -159,13 +161,10 @@ const VideoPreview = ({ file, previewUrl, duration, durationError, onDurationLoa
             onLoadedMetadata={(event) => onDurationLoaded(event.currentTarget.duration)}
           />
         )}
-        {previewUrl && mediaType === 'photo' && (
-          <img className="tiktok-video" src={previewUrl} alt="Selected upload preview" />
-        )}
         {!previewUrl && (
           <div className="tiktok-video-empty">
             <FileVideo size={42} />
-            <span>Select a video or photo to preview the exact media before posting</span>
+            <span>Select a video to preview the exact media before posting</span>
           </div>
         )}
       </div>
@@ -175,7 +174,7 @@ const VideoPreview = ({ file, previewUrl, duration, durationError, onDurationLoa
           <input
             className="tiktok-file-input"
             type="file"
-            accept="video/mp4,video/quicktime,video/webm,image/jpeg,image/png"
+            accept="video/mp4,video/quicktime,video/webm"
             onChange={onFileChange}
           />
         </label>
@@ -183,7 +182,7 @@ const VideoPreview = ({ file, previewUrl, duration, durationError, onDurationLoa
           <p className="truncate font-semibold text-white">{file?.name || 'No file selected'}</p>
           <p className="mt-2 flex items-center gap-2 text-sm text-slate-300">
             <Clock3 size={16} />
-            {mediaType === 'photo' ? 'Photo post' : formatDuration(duration)}
+            {formatDuration(duration)}
           </p>
         </div>
         {durationError && <FieldError>{durationError}</FieldError>}
@@ -352,7 +351,11 @@ const PostToTikTok = () => {
   const [toast, setToast] = useState(null);
   const [apiError, setApiError] = useState('');
 
-  const mediaType = file?.type?.startsWith('image/') ? 'photo' : 'video';
+  const mediaType = 'video';
+  const creatorAccountLooksPublic = Boolean(
+    creatorInfo?.privacy_level_options?.includes('PUBLIC_TO_EVERYONE'),
+  );
+  const unauditedPrivateAccountRequired = !directPostApproved && creatorAccountLooksPublic;
 
   useEffect(() => {
     let active = true;
@@ -392,6 +395,12 @@ const PostToTikTok = () => {
     if (!creatorInfo) errors.account = 'Connect TikTok before publishing.';
     if (!caption.trim()) errors.caption = 'Caption is required and must remain editable by the creator.';
     if (!privacy) errors.privacy = 'Choose a privacy option returned by TikTok creator_info.';
+    if (!directPostApproved && privacy && privacy !== 'SELF_ONLY') {
+      errors.privacy = 'Before Direct Post audit approval, TikTok only allows SELF_ONLY posting.';
+    }
+    if (unauditedPrivateAccountRequired) {
+      errors.account = 'Before Direct Post audit approval, TikTok requires posting test accounts to be private. Set your TikTok account to private, then reconnect.';
+    }
     if (
       mediaType === 'video' &&
       Number.isFinite(duration) &&
@@ -411,7 +420,7 @@ const PostToTikTok = () => {
       errors.disclosure = 'Branded content visibility cannot be set to private.';
     }
     return errors;
-  }, [caption, creatorInfo, disclosure, duration, file, mediaType, privacy]);
+  }, [caption, creatorInfo, disclosure, duration, file, mediaType, privacy, unauditedPrivateAccountRequired]);
 
   const canPublish = Object.keys(validation).length === 0 && publishState !== 'uploading' && publishState !== 'processing';
   const consentText = disclosure.brandedContent
@@ -513,6 +522,11 @@ const PostToTikTok = () => {
             {apiError}
           </div>
         )}
+        {validation.account && creatorInfo && (
+          <div className="mb-6 rounded-lg border border-amber-300/20 bg-amber-300/10 p-4 text-sm text-amber-100">
+            {validation.account}
+          </div>
+        )}
 
         <div className="tiktok-layout">
           <div className="tiktok-main-column">
@@ -529,7 +543,6 @@ const PostToTikTok = () => {
               previewUrl={previewUrl}
               duration={duration}
               durationError={validation.duration}
-              mediaType={mediaType}
               onDurationLoaded={setDuration}
               onFileChange={(event) => {
                 const nextFile = event.target.files?.[0] || null;
