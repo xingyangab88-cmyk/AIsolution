@@ -1,49 +1,67 @@
 /* global process */
 
-const TIKTOK_TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
+const TIKTOK_API_BASE = 'https://open.tiktokapis.com';
 const REDIRECT_URI = 'https://solarkhmer.vercel.app/callback';
+
+const cookieOptions = [
+  'Path=/',
+  'HttpOnly',
+  'Secure',
+  'SameSite=Lax',
+];
+
+const makeCookie = (name, value, maxAgeSeconds) =>
+  `${name}=${encodeURIComponent(value)}; ${[
+    ...cookieOptions,
+    `Max-Age=${maxAgeSeconds}`,
+  ].join('; ')}`;
+
+const getTikTokCredentials = (state = '') => {
+  const isSandbox = String(state).includes('sandbox');
+
+  return {
+    clientKey: isSandbox
+      ? process.env.TIKTOK_SANDBOX_CLIENT_KEY || process.env.TIKTOK_CLIENT_KEY
+      : process.env.TIKTOK_CLIENT_KEY,
+    clientSecret: isSandbox
+      ? process.env.TIKTOK_SANDBOX_CLIENT_SECRET || process.env.TIKTOK_CLIENT_SECRET
+      : process.env.TIKTOK_CLIENT_SECRET,
+  };
+};
 
 export default async function handler(request, response) {
   response.setHeader('Cache-Control', 'no-store');
 
   if (request.method !== 'GET') {
     response.setHeader('Allow', 'GET');
-    return response.status(405).json({ ok: false, error: 'Method not allowed' });
+    return response.status(405).send('Method not allowed');
   }
 
-  const { code, error, error_description: errorDescription, state } = request.query;
+  const {
+    code,
+    state = '',
+    error,
+    error_description: errorDescription,
+  } = request.query;
 
   if (error) {
-    return response.status(400).json({
-      ok: false,
-      error,
-      error_description: errorDescription,
-    });
+    return response.redirect(
+      302,
+      `/tiktok-demo?auth=error&message=${encodeURIComponent(errorDescription || error)}`,
+    );
   }
 
   if (!code || typeof code !== 'string') {
-    return response.status(400).json({
-      ok: false,
-      error: 'Missing TikTok authorization code',
-    });
+    return response.redirect(302, '/api/tiktok-login');
   }
 
-  const isSandbox = typeof state === 'string' && state.includes('sandbox');
-  const clientKey = isSandbox
-    ? process.env.TIKTOK_SANDBOX_CLIENT_KEY || process.env.TIKTOK_CLIENT_KEY
-    : process.env.TIKTOK_CLIENT_KEY;
-  const clientSecret = isSandbox
-    ? process.env.TIKTOK_SANDBOX_CLIENT_SECRET
-    : process.env.TIKTOK_CLIENT_SECRET;
+  const { clientKey, clientSecret } = getTikTokCredentials(state);
 
   if (!clientKey || !clientSecret) {
-    return response.status(500).json({
-      ok: false,
-      error: 'TikTok credentials are not configured',
-    });
+    return response.status(500).send('TikTok client key or secret is not configured.');
   }
 
-  const body = new URLSearchParams({
+  const tokenBody = new URLSearchParams({
     client_key: clientKey,
     client_secret: clientSecret,
     code,
@@ -51,51 +69,35 @@ export default async function handler(request, response) {
     redirect_uri: REDIRECT_URI,
   });
 
-  const tokenResponse = await fetch(TIKTOK_TOKEN_URL, {
+  const tokenResponse = await fetch(`${TIKTOK_API_BASE}/v2/oauth/token/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
+      'Cache-Control': 'no-cache',
     },
-    body,
+    body: tokenBody,
   });
-
   const tokenData = await tokenResponse.json();
 
   if (!tokenResponse.ok || tokenData.error) {
     return response.status(400).json({
       ok: false,
       error: tokenData.error || 'TikTok token exchange failed',
-      error_description: tokenData.error_description,
-      log_id: tokenData.log_id,
+      message: tokenData.error_description,
+      data: tokenData,
     });
   }
 
-  const accessCookie = [
-    `tiktok_access_token=${encodeURIComponent(tokenData.access_token)}`,
-    'HttpOnly',
-    'Secure',
-    'SameSite=Lax',
-    'Path=/',
-    `Max-Age=${tokenData.expires_in || 86400}`,
-  ].join('; ');
-  const refreshCookie = [
-    `tiktok_refresh_token=${encodeURIComponent(tokenData.refresh_token)}`,
-    'HttpOnly',
-    'Secure',
-    'SameSite=Lax',
-    'Path=/',
-    `Max-Age=${tokenData.refresh_expires_in || 31536000}`,
-  ].join('; ');
-  const openIdCookie = [
-    `tiktok_open_id=${encodeURIComponent(tokenData.open_id)}`,
-    'HttpOnly',
-    'Secure',
-    'SameSite=Lax',
-    'Path=/',
-    `Max-Age=${tokenData.expires_in || 86400}`,
-  ].join('; ');
+  const accessTokenMaxAge = Number(tokenData.expires_in || 86400);
+  const refreshTokenMaxAge = Number(tokenData.refresh_expires_in || 31536000);
+  const cookies = [
+    makeCookie('tiktok_access_token', tokenData.access_token, accessTokenMaxAge),
+  ];
 
-  response.setHeader('Set-Cookie', [accessCookie, refreshCookie, openIdCookie]);
+  if (tokenData.refresh_token) {
+    cookies.push(makeCookie('tiktok_refresh_token', tokenData.refresh_token, refreshTokenMaxAge));
+  }
 
-  return response.redirect(302, '/tiktok-demo?auth=success');
+  response.setHeader('Set-Cookie', cookies);
+  return response.redirect(302, '/post-to-tiktok?auth=success');
 }
