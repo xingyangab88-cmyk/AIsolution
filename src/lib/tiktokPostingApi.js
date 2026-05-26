@@ -41,6 +41,20 @@ export const fetchTikTokCreatorInfo = async () => {
   return normalizeCreatorInfo(data);
 };
 
+const readJsonResponse = async (response) => {
+  const text = await response.text();
+
+  if (!text) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(text.slice(0, 160) || `Unexpected response from server (${response.status})`);
+  }
+};
+
 export const publishTikTokPost = async ({
   file,
   caption,
@@ -53,25 +67,47 @@ export const publishTikTokPost = async ({
   brandedContent,
   mediaType,
 }) => {
-  const formData = new FormData();
-  formData.append('media', file);
-  formData.append('caption', caption);
-  formData.append('privacy_level', privacyLevel);
-  formData.append('media_type', mediaType);
-  formData.append('disable_comment', String(!allowComments));
-  formData.append('disable_duet', String(!allowDuet));
-  formData.append('disable_stitch', String(!allowStitch));
-  formData.append('brand_organic_toggle', String(promotesContent && yourBrand));
-  formData.append('brand_content_toggle', String(promotesContent && brandedContent));
+  if (mediaType === 'photo') {
+    throw new Error('Photo publishing is not connected to the backend yet. Select a video for TikTok Direct Post.');
+  }
 
-  const response = await fetch('/api/tiktok/publish', {
+  const response = await fetch('/api/tiktok-post', {
     method: 'POST',
-    body: formData,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      mode: 'publish',
+      title: caption,
+      source: 'FILE_UPLOAD',
+      videoSize: file.size,
+      privacyLevel,
+      disableComment: !allowComments,
+      disableDuet: !allowDuet,
+      disableStitch: !allowStitch,
+      brandOrganicToggle: promotesContent && yourBrand,
+      brandContentToggle: promotesContent && brandedContent,
+    }),
   });
-  const data = await response.json();
+  const data = await readJsonResponse(response);
 
   if (!response.ok || data.ok === false) {
     throw new Error(data.message || data.error || 'TikTok publish failed');
+  }
+
+  if (data.upload_url) {
+    const uploadResponse = await fetch(data.upload_url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type || 'video/mp4',
+        'Content-Range': `bytes 0-${file.size - 1}/${file.size}`,
+      },
+      body: file,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error(`TikTok file upload failed with HTTP ${uploadResponse.status}`);
+    }
   }
 
   return data;

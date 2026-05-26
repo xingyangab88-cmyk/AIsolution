@@ -32,6 +32,11 @@ export default async function handler(request, response) {
     videoUrl,
     videoSize,
     privacyLevel = 'SELF_ONLY',
+    disableComment = true,
+    disableDuet = true,
+    disableStitch = true,
+    brandOrganicToggle = false,
+    brandContentToggle = false,
   } = request.body || {};
 
   const usesFileUpload = source === 'FILE_UPLOAD';
@@ -71,10 +76,11 @@ export default async function handler(request, response) {
         post_info: {
           title,
           privacy_level: privacyLevel,
-          disable_duet: true,
-          disable_comment: true,
-          disable_stitch: true,
-          brand_content_toggle: false,
+          disable_duet: Boolean(disableDuet),
+          disable_comment: Boolean(disableComment),
+          disable_stitch: Boolean(disableStitch),
+          brand_organic_toggle: Boolean(brandOrganicToggle),
+          brand_content_toggle: Boolean(brandContentToggle),
         },
         source_info: sourceInfo,
       }
