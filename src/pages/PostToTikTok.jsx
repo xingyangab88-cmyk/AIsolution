@@ -222,7 +222,7 @@ const CaptionField = ({ caption, setCaption, error }) => (
   </Section>
 );
 
-const PrivacySelector = ({ options, value, setValue, error }) => (
+const PrivacySelector = ({ options, value, setValue, error, brandedContentSelected }) => (
   <Section icon={ChevronDown} title="Privacy">
     <label htmlFor="privacy-level" className="mb-2 block text-sm font-semibold text-slate-200">
       Privacy
@@ -235,11 +235,21 @@ const PrivacySelector = ({ options, value, setValue, error }) => (
     >
       <option value="">Select privacy</option>
       {options.map((option) => (
-        <option key={option} value={option}>
+        <option
+          key={option}
+          value={option}
+          disabled={brandedContentSelected && option === 'SELF_ONLY'}
+        >
           {privacyLabels[option] || option}
+          {brandedContentSelected && option === 'SELF_ONLY'
+            ? ' - unavailable for branded content'
+            : ''}
         </option>
       ))}
     </select>
+    {brandedContentSelected && (
+      <p className="tiktok-help-text">Branded content visibility cannot be set to private.</p>
+    )}
     {error && <FieldError>{error}</FieldError>}
   </Section>
 );
@@ -274,7 +284,15 @@ const InteractionSettings = ({ mediaType, creatorInfo, interactions, setInteract
   );
 };
 
-const CommercialDisclosure = ({ disclosure, setDisclosure, error }) => (
+const CommercialDisclosure = ({ disclosure, setDisclosure, error, privacy }) => {
+  const isPrivateVisibility = privacy === 'SELF_ONLY';
+  const labelText = disclosure.brandedContent
+    ? "Your photo/video will be labeled as 'Paid partnership'"
+    : disclosure.yourBrand
+      ? "Your photo/video will be labeled as 'Promotional content'"
+      : '';
+
+  return (
   <Section icon={Music2} title="Commercial content disclosure">
     <label className="tiktok-toggle-row">
       <span className="font-semibold text-white">Does this content promote yourself, a brand, product or service?</span>
@@ -295,14 +313,19 @@ const CommercialDisclosure = ({ disclosure, setDisclosure, error }) => (
     {disclosure.promotesContent && (
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {[
-          ['yourBrand', 'Your brand'],
-          ['brandedContent', 'Branded content'],
-        ].map(([key, label]) => (
-          <label key={key} className="tiktok-check-row">
+          ['yourBrand', 'Your brand', false],
+          ['brandedContent', 'Branded content', isPrivateVisibility],
+        ].map(([key, label, disabled]) => (
+          <label
+            key={key}
+            className={`tiktok-check-row ${disabled ? 'is-disabled' : ''}`}
+            title={disabled ? "Branded content visibility cannot be set to private." : undefined}
+          >
             <input
               className="h-5 w-5 rounded border-white/20 bg-slate-950 text-cyan-300"
               type="checkbox"
               checked={disclosure[key]}
+              disabled={disabled}
               onChange={(event) => setDisclosure((current) => ({ ...current, [key]: event.target.checked }))}
             />
             {label}
@@ -310,9 +333,14 @@ const CommercialDisclosure = ({ disclosure, setDisclosure, error }) => (
         ))}
       </div>
     )}
+    {labelText && <p className="tiktok-disclosure-label">{labelText}</p>}
+    {isPrivateVisibility && disclosure.promotesContent && (
+      <p className="tiktok-help-text">Choose Public or Friends before selecting Branded content.</p>
+    )}
     {error && <FieldError>{error}</FieldError>}
   </Section>
-);
+  );
+};
 
 const PostToTikTok = () => {
   const [creatorInfo, setCreatorInfo] = useState(null);
@@ -390,6 +418,9 @@ const PostToTikTok = () => {
       !disclosure.brandedContent
     ) {
       errors.disclosure = 'Choose Your brand, Branded content, or both.';
+    }
+    if (disclosure.brandedContent && privacy === 'SELF_ONLY') {
+      errors.disclosure = 'Branded content visibility cannot be set to private.';
     }
     return errors;
   }, [activeCreatorInfo.max_video_post_duration_sec, caption, creatorInfo, disclosure, duration, file, mediaType, privacy]);
@@ -505,6 +536,7 @@ const PostToTikTok = () => {
               value={privacy}
               setValue={setPrivacy}
               error={validation.privacy}
+              brandedContentSelected={disclosure.brandedContent}
             />
             <InteractionSettings
               mediaType={mediaType}
@@ -516,6 +548,7 @@ const PostToTikTok = () => {
               disclosure={disclosure}
               setDisclosure={setDisclosure}
               error={validation.disclosure}
+              privacy={privacy}
             />
 
             <section className="tiktok-publish-card">

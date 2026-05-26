@@ -286,6 +286,22 @@
   font-size: 14px;
 }
 
+.tiktok-help-text,
+.tiktok-disclosure-label {
+  margin-top: 10px;
+  color: #cbd5e1;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tiktok-disclosure-label {
+  padding: 10px 12px;
+  border: 1px solid rgba(103, 232, 249, 0.18);
+  border-radius: 7px;
+  background: rgba(8, 145, 178, 0.12);
+  color: #cffafe;
+}
+
 .tiktok-status-card {
   margin-top: 16px;
   padding: 16px;
