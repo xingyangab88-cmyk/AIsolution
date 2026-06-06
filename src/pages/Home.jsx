@@ -27,6 +27,9 @@ const Home = () => {
               <Link to="/tiktok-demo" className="btn btn-outline">
                 TikTok Demo
               </Link>
+              <Link to="/tiktok-auth-code" className="btn btn-outline">
+                TikTok Auth Code
+              </Link>
             </div>
           </div>
           <div className="hero-image-wrapper">

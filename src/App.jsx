@@ -9,6 +9,7 @@ import Contact from './pages/Contact';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import TikTokDemo from './pages/TikTokDemo';
+import TikTokAuthCode from './pages/TikTokAuthCode';
 import PostToTikTok from './pages/PostToTikTok';
 
 const ScrollToTop = () => {
@@ -36,6 +37,7 @@ function App() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/tiktok-demo" element={<TikTokDemo />} />
+            <Route path="/tiktok-auth-code" element={<TikTokAuthCode />} />
             <Route path="/post-to-tiktok" element={<PostToTikTok />} />
           </Routes>
         </main>

@@ -125,26 +125,41 @@ const ConnectedAccount = ({ creatorInfo, loading, error, onConnect }) => (
         </div>
       </div>
     ) : (
-      <div className="tiktok-account-row">
-        <div className="flex min-w-0 items-center gap-4">
-          {creatorInfo.avatar_url ? (
-            <img
-              className="h-16 w-16 rounded-full border border-white/10 object-cover"
-              src={creatorInfo.avatar_url}
-              alt={`${creatorInfo.nickname} TikTok avatar`}
-            />
-          ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-slate-800 text-lg font-bold">
-              TK
+      <>
+        <div className="tiktok-account-row">
+          <div className="flex min-w-0 items-center gap-4">
+            {creatorInfo.avatar_url ? (
+              <img
+                className="h-16 w-16 rounded-full border border-white/10 object-cover"
+                src={creatorInfo.avatar_url}
+                alt={`${creatorInfo.nickname} TikTok avatar`}
+              />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-slate-800 text-lg font-bold">
+                TK
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm text-slate-400">Connected account</p>
+              <p className="truncate text-xl font-semibold text-white">{creatorInfo.nickname}</p>
+              <p className="truncate text-slate-300">@{creatorInfo.username}</p>
             </div>
-          )}
-          <div className="min-w-0">
-            <p className="text-sm text-slate-400">Connected account</p>
-            <p className="truncate text-xl font-semibold text-white">{creatorInfo.nickname}</p>
-            <p className="truncate text-slate-300">@{creatorInfo.username}</p>
           </div>
         </div>
-      </div>
+        {creatorInfo.access_token && (
+          <div className="tiktok-token-box">
+            <p>Access token</p>
+            <code>{creatorInfo.access_token}</code>
+            <button
+              className="tiktok-secondary-small"
+              type="button"
+              onClick={() => navigator.clipboard?.writeText(creatorInfo.access_token)}
+            >
+              Copy token
+            </button>
+          </div>
+        )}
+      </>
     )}
   </Section>
 );
@@ -225,6 +240,7 @@ const PrivacySelector = ({ options, value, setValue, error, brandedContentSelect
           key={option}
           value={option}
           disabled={brandedContentSelected && option === 'SELF_ONLY'}
+          title={brandedContentSelected && option === 'SELF_ONLY' ? "Branded content visibility cannot be set to private." : undefined}
         >
           {privacyLabels[option] || option}
           {brandedContentSelected && option === 'SELF_ONLY'
@@ -409,6 +425,9 @@ const PostToTikTok = () => {
     ) {
       errors.duration = `Video duration must be ${creatorInfo.max_video_post_duration_sec} seconds or less.`;
     }
+    if (creatorInfo?.reach_max_post_limit) {
+      errors.account = 'You have reached your daily posting limit. Please try again later.';
+    }
     if (
       disclosure.promotesContent &&
       !disclosure.yourBrand &&
@@ -582,15 +601,21 @@ const PostToTikTok = () => {
 
             <section className="tiktok-publish-card">
               <p className="text-sm text-slate-300">{consentText}</p>
-              <button
-                className="tiktok-publish-button"
-                type="button"
-                disabled={!canPublish}
-                onClick={handlePublish}
+              <div 
+                className="w-full" 
+                title={disclosure.promotesContent && !disclosure.yourBrand && !disclosure.brandedContent ? "You need to indicate if your content promotes yourself, a third party, or both." : undefined}
               >
-                {(publishState === 'uploading' || publishState === 'processing') && <Loader2 className="animate-spin" size={18} />}
-                Publish to TikTok
-              </button>
+                <button
+                  className="tiktok-publish-button"
+                  type="button"
+                  disabled={!canPublish}
+                  onClick={handlePublish}
+                  style={!canPublish ? { pointerEvents: 'none' } : undefined}
+                >
+                  {(publishState === 'uploading' || publishState === 'processing') && <Loader2 className="animate-spin" size={18} />}
+                  Publish to TikTok
+                </button>
+              </div>
               {!validation.file && !validation.caption && !validation.privacy && !validation.disclosure ? null : (
                 <p className="mt-3 text-sm text-slate-400">Complete the required review choices to enable publishing.</p>
               )}

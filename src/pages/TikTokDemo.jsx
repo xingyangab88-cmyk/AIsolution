@@ -34,6 +34,7 @@ const TikTokDemo = () => {
   const authParams = useMemo(() => new URLSearchParams(window.location.search), []);
   const [signedIn, setSignedIn] = useState(authParams.get('auth') === 'success');
   const [creatorInfo, setCreatorInfo] = useState(null);
+  const [accessToken, setAccessToken] = useState('');
   const [sessionChecked, setSessionChecked] = useState(false);
   const [creatorStatus, setCreatorStatus] = useState('');
   const [creatorError, setCreatorError] = useState('');
@@ -64,6 +65,7 @@ const TikTokDemo = () => {
 
     if (sessionResponse.ok && sessionData.authenticated) {
       setSignedIn(true);
+      setAccessToken(sessionData.access_token || '');
     }
 
     setSessionChecked(true);
@@ -88,6 +90,7 @@ const TikTokDemo = () => {
     }
 
     setCreatorInfo(creatorData.creator);
+    setAccessToken(creatorData.access_token || '');
     setSelectedPrivacy('');
     setCreatorStatus('TikTok account loaded. Choose privacy before posting.');
   }, []);
@@ -102,6 +105,7 @@ const TikTokDemo = () => {
 
     setSignedIn(false);
     setCreatorInfo(null);
+    setAccessToken('');
     setSelectedPrivacy('');
     setDraftSent(false);
     setPublishSent(false);
@@ -348,6 +352,19 @@ const TikTokDemo = () => {
           </div>
           {creatorStatus && <div className="api-status active">{creatorStatus}</div>}
           {creatorError && <div className="api-status error">{creatorError}</div>}
+          {accessToken && (
+            <div className="token-box">
+              <span>Access token</span>
+              <code>{accessToken}</code>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => navigator.clipboard?.writeText(accessToken)}
+              >
+                Copy token
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="posting-panel">

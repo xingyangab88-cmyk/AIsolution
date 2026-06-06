@@ -10,6 +10,8 @@ const normalizeCreatorInfo = (payload) => {
     duet_disabled: Boolean(data.duet_disabled),
     stitch_disabled: Boolean(data.stitch_disabled),
     max_video_post_duration_sec: Number(data.max_video_post_duration_sec || 600),
+    reach_max_post_limit: Boolean(data.reach_max_post_limit),
+    access_token: payload?.access_token || data.access_token || '',
   };
 };
 

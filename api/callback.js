@@ -29,6 +29,11 @@ const getTikTokCredentials = (state = '') => {
   };
 };
 
+const redirectToAuthCodePage = (response, params) => {
+  const query = new URLSearchParams(params);
+  return response.redirect(302, `/tiktok-auth-code?${query.toString()}`);
+};
+
 export default async function handler(request, response) {
   response.setHeader('Cache-Control', 'no-store');
 
@@ -43,8 +48,17 @@ export default async function handler(request, response) {
     error,
     error_description: errorDescription,
   } = request.query;
+  const isCodeOnlyRequest = String(state).includes('code_only');
 
   if (error) {
+    if (isCodeOnlyRequest) {
+      return redirectToAuthCodePage(response, {
+        auth: 'error',
+        message: errorDescription || error,
+        state,
+      });
+    }
+
     return response.redirect(
       302,
       `/tiktok-demo?auth=error&message=${encodeURIComponent(errorDescription || error)}`,
@@ -53,6 +67,15 @@ export default async function handler(request, response) {
 
   if (!code || typeof code !== 'string') {
     return response.redirect(302, '/api/tiktok-login');
+  }
+
+  if (isCodeOnlyRequest) {
+    return redirectToAuthCodePage(response, {
+      auth: 'code',
+      code,
+      state,
+      received_at: new Date().toISOString(),
+    });
   }
 
   const { clientKey, clientSecret } = getTikTokCredentials(state);
@@ -93,6 +116,10 @@ export default async function handler(request, response) {
   const cookies = [
     makeCookie('tiktok_access_token', tokenData.access_token, accessTokenMaxAge),
   ];
+
+  if (tokenData.open_id) {
+    cookies.push(makeCookie('tiktok_open_id', tokenData.open_id, accessTokenMaxAge));
+  }
 
   if (tokenData.refresh_token) {
     cookies.push(makeCookie('tiktok_refresh_token', tokenData.refresh_token, refreshTokenMaxAge));

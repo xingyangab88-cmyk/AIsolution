@@ -124,6 +124,38 @@
   align-items: stretch;
 }
 
+.tiktok-token-box {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(103, 232, 249, 0.26);
+  border-radius: 8px;
+  background: rgba(8, 145, 178, 0.12);
+}
+
+.tiktok-token-box p {
+  margin: 0;
+  color: #cffafe;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.tiktok-token-box code {
+  max-height: 112px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  border-radius: 7px;
+  padding: 12px;
+  background: rgba(2, 6, 23, 0.74);
+  color: #e0f2fe;
+  white-space: pre-wrap;
+}
+
+.tiktok-token-box .tiktok-secondary-small {
+  width: max-content;
+}
+
 .tiktok-primary-small,
 .tiktok-secondary-small,
 .tiktok-publish-button {

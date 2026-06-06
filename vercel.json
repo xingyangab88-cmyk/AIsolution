@@ -5,6 +5,10 @@
       "destination": "/api/callback"
     },
     {
+      "source": "/webhook/facebook",
+      "destination": "/api/webhook/facebook"
+    },
+    {
       "source": "/terms",
       "destination": "/terms/index.html"
     },

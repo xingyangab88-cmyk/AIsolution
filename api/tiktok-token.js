@@ -18,10 +18,15 @@ export default async function handler(request, response) {
 
   const accessToken = getCookie(request, 'tiktok_access_token');
 
+  if (!accessToken) {
+    return response.status(401).json({
+      ok: false,
+      error: 'No TikTok access token. Connect TikTok first.',
+    });
+  }
+
   return response.status(200).json({
     ok: true,
-    authenticated: Boolean(accessToken),
-    access_token: accessToken || null,
-    open_id: getCookie(request, 'tiktok_open_id') || null,
+    access_token: accessToken,
   });
 }
