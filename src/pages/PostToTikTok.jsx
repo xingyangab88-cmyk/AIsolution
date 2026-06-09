@@ -164,11 +164,11 @@ const ConnectedAccount = ({ creatorInfo, loading, error, onConnect }) => (
   </Section>
 );
 
-const VideoPreview = ({ file, previewUrl, duration, durationError, onDurationLoaded, onFileChange }) => (
+const VideoPreview = ({ file, previewUrl, duration, durationError, onDurationLoaded, onFileChange, mediaType }) => (
   <Section icon={FileVideo} title="Media preview">
     <div className="tiktok-media-grid">
       <div className="tiktok-video-shell">
-        {previewUrl && (
+        {previewUrl && mediaType === 'video' && (
           <video
             className="tiktok-video"
             src={previewUrl}
@@ -176,10 +176,18 @@ const VideoPreview = ({ file, previewUrl, duration, durationError, onDurationLoa
             onLoadedMetadata={(event) => onDurationLoaded(event.currentTarget.duration)}
           />
         )}
+        {previewUrl && mediaType === 'photo' && (
+          <img
+            className="tiktok-image-preview object-contain h-full w-full"
+            src={previewUrl}
+            alt="Preview"
+            onLoad={() => onDurationLoaded(null)}
+          />
+        )}
         {!previewUrl && (
           <div className="tiktok-video-empty">
             <FileVideo size={42} />
-            <span>Select a video to preview the exact media before posting</span>
+            <span>Select media to preview before posting</span>
           </div>
         )}
       </div>
@@ -189,7 +197,7 @@ const VideoPreview = ({ file, previewUrl, duration, durationError, onDurationLoa
           <input
             className="tiktok-file-input"
             type="file"
-            accept="video/mp4,video/quicktime,video/webm"
+            accept="video/mp4,video/quicktime,video/webm,image/jpeg,image/png,image/webp"
             onChange={onFileChange}
           />
         </label>
@@ -197,7 +205,7 @@ const VideoPreview = ({ file, previewUrl, duration, durationError, onDurationLoa
           <p className="truncate font-semibold text-white">{file?.name || 'No file selected'}</p>
           <p className="mt-2 flex items-center gap-2 text-sm text-slate-300">
             <Clock3 size={16} />
-            {formatDuration(duration)}
+            {mediaType === 'photo' ? 'Photo post' : formatDuration(duration)}
           </p>
         </div>
         {durationError && <FieldError>{durationError}</FieldError>}
@@ -392,7 +400,7 @@ const PostToTikTok = () => {
   const [toast, setToast] = useState(null);
   const [apiError, setApiError] = useState('');
 
-  const mediaType = 'video';
+  const mediaType = file?.type?.startsWith('image/') ? 'photo' : 'video';
   const creatorAccountLooksPublic = Boolean(
     creatorInfo?.privacy_level_options?.includes('PUBLIC_TO_EVERYONE'),
   );
@@ -596,6 +604,7 @@ const PostToTikTok = () => {
                 setDuration(null);
                 setPreviewUrl(nextFile ? URL.createObjectURL(nextFile) : '');
               }}
+              mediaType={mediaType}
             />
             <CaptionField caption={caption} setCaption={setCaption} error={validation.caption} />
           </div>

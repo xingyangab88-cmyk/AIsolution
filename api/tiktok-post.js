@@ -38,6 +38,7 @@ export default async function handler(request, response) {
     brandOrganicToggle = false,
     brandContentToggle = false,
     isAigc = false,
+    mediaType = 'video',
   } = request.body || {};
 
   const usesFileUpload = source === 'FILE_UPLOAD';
@@ -53,14 +54,15 @@ export default async function handler(request, response) {
   if (usesFileUpload && (!Number.isFinite(parsedVideoSize) || parsedVideoSize <= 0)) {
     return response.status(400).json({
       ok: false,
-      error: 'Video file size is required',
+      error: 'Media file size is required',
     });
   }
 
   const isPublish = mode === 'publish';
+  const isPhoto = mediaType === 'photo';
   const endpoint = isPublish
-    ? '/v2/post/publish/video/init/'
-    : '/v2/post/publish/inbox/video/init/';
+    ? (isPhoto ? '/v2/post/publish/photo/init/' : '/v2/post/publish/video/init/')
+    : (isPhoto ? '/v2/post/publish/inbox/photo/init/' : '/v2/post/publish/inbox/video/init/');
   const sourceInfo = usesFileUpload
     ? {
         source: 'FILE_UPLOAD',
@@ -119,8 +121,8 @@ export default async function handler(request, response) {
     publish_id: postData.data?.publish_id,
     upload_url: postData.data?.upload_url,
     message: isPublish
-      ? `Video publish initialized with ${privacyLevel} privacy`
-      : 'Video draft upload initialized',
+      ? `${isPhoto ? 'Photo' : 'Video'} publish initialized with ${privacyLevel} privacy`
+      : `${isPhoto ? 'Photo' : 'Video'} draft upload initialized`,
     data: postData.data,
   });
 }

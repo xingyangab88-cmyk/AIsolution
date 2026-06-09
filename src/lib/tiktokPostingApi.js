@@ -76,10 +76,6 @@ export const publishTikTokPost = async ({
   isAigc,
   mediaType,
 }) => {
-  if (mediaType === 'photo') {
-    throw new Error('Photo publishing is not connected to the backend yet. Select a video for TikTok Direct Post.');
-  }
-
   const response = await fetch('/api/tiktok-post', {
     method: 'POST',
     headers: {
@@ -97,6 +93,7 @@ export const publishTikTokPost = async ({
       brandOrganicToggle: promotesContent && yourBrand,
       brandContentToggle: promotesContent && brandedContent,
       isAigc,
+      mediaType,
     }),
   });
   const data = await readJsonResponse(response);
