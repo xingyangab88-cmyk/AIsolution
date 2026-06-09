@@ -72,11 +72,31 @@
 
 .tiktok-card,
 .tiktok-publish-card {
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 8px;
-  background: rgba(15, 23, 42, 0.82);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   overflow: hidden;
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.tiktok-card:nth-child(1) { animation-delay: 0.1s; }
+.tiktok-card:nth-child(2) { animation-delay: 0.2s; }
+.tiktok-card:nth-child(3) { animation-delay: 0.3s; }
+.tiktok-publish-card { animation-delay: 0.4s; }
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .tiktok-card {
@@ -84,8 +104,10 @@
 }
 
 .tiktok-publish-card {
-  padding: 22px;
-  background: linear-gradient(180deg, rgba(22, 33, 54, 0.92), rgba(15, 23, 42, 0.92));
+  padding: 24px;
+  background: linear-gradient(180deg, rgba(22, 33, 54, 0.8), rgba(15, 23, 42, 0.9));
+  border-top: 1px solid rgba(103, 232, 249, 0.2);
+  box-shadow: 0 30px 80px rgba(8, 145, 178, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .tiktok-card-title {
@@ -164,22 +186,47 @@
   justify-content: center;
   gap: 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 800;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.tiktok-primary-small:hover,
+.tiktok-secondary-small:hover,
+.tiktok-publish-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.tiktok-primary-small:active,
+.tiktok-secondary-small:active,
+.tiktok-publish-button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .tiktok-primary-small {
-  padding: 10px 14px;
+  padding: 10px 16px;
   background: #67e8f9;
   color: #06111d;
+  box-shadow: 0 4px 14px rgba(103, 232, 249, 0.25);
+}
+
+.tiktok-primary-small:hover {
+  background: #22d3ee;
+  box-shadow: 0 6px 20px rgba(103, 232, 249, 0.4);
 }
 
 .tiktok-secondary-small {
-  padding: 10px 14px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  padding: 10px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
   background: rgba(15, 23, 42, 0.7);
   color: #e2e8f0;
+}
+
+.tiktok-secondary-small:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(148, 163, 184, 0.5);
 }
 
 .tiktok-media-grid {
@@ -227,11 +274,20 @@
 .tiktok-textarea,
 .tiktok-select {
   width: 100%;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 7px;
-  background: rgba(2, 6, 23, 0.62);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.6);
   color: #fff;
   outline: none;
+  transition: all 0.2s ease;
+}
+
+.tiktok-file-input:focus,
+.tiktok-textarea:focus,
+.tiktok-select:focus {
+  border-color: #67e8f9;
+  box-shadow: 0 0 0 3px rgba(103, 232, 249, 0.15);
+  background: rgba(2, 6, 23, 0.8);
 }
 
 .tiktok-file-input {
@@ -273,10 +329,17 @@
   align-items: center;
   gap: 12px;
   padding: 13px 14px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 7px;
-  background: rgba(2, 6, 23, 0.34);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.4);
   color: #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.tiktok-check-row:hover:not(.is-disabled),
+.tiktok-toggle-row:hover {
+  background: rgba(2, 6, 23, 0.7);
+  border-color: rgba(148, 163, 184, 0.4);
 }
 
 .tiktok-toggle-row {
@@ -298,9 +361,16 @@
 .tiktok-publish-button {
   width: 100%;
   margin-top: 16px;
-  padding: 14px 16px;
-  background: linear-gradient(135deg, #67e8f9, #22d3ee);
-  color: #06111d;
+  padding: 16px;
+  background: linear-gradient(135deg, #67e8f9, #0ea5e9);
+  color: #020617;
+  font-size: 15px;
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3);
+}
+
+.tiktok-publish-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #22d3ee, #0284c7);
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
 }
 
 .tiktok-publish-button:disabled {
