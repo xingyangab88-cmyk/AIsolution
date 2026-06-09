@@ -73,6 +73,7 @@ export const publishTikTokPost = async ({
   promotesContent,
   yourBrand,
   brandedContent,
+  isAigc,
   mediaType,
 }) => {
   if (mediaType === 'photo') {
@@ -95,6 +96,7 @@ export const publishTikTokPost = async ({
       disableStitch: !allowStitch,
       brandOrganicToggle: promotesContent && yourBrand,
       brandContentToggle: promotesContent && brandedContent,
+      isAigc,
     }),
   });
   const data = await readJsonResponse(response);

@@ -37,6 +37,7 @@ export default async function handler(request, response) {
     disableStitch = true,
     brandOrganicToggle = false,
     brandContentToggle = false,
+    isAigc = false,
   } = request.body || {};
 
   const usesFileUpload = source === 'FILE_UPLOAD';
@@ -81,6 +82,9 @@ export default async function handler(request, response) {
           disable_stitch: Boolean(disableStitch),
           brand_organic_toggle: Boolean(brandOrganicToggle),
           brand_content_toggle: Boolean(brandContentToggle),
+          aigc_info: {
+            aigc_label_type: isAigc ? 'AIGC_GENERIC' : 'UNDISCLOSED',
+          },
         },
         source_info: sourceInfo,
       }
