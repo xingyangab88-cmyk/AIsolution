@@ -356,6 +356,31 @@
   cursor: not-allowed;
   color: #64748b;
   background: rgba(15, 23, 42, 0.72);
+  position: relative;
+}
+
+.tiktok-check-row.is-disabled::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.tiktok-check-row.is-disabled:hover::after {
+  opacity: 1;
 }
 
 .tiktok-publish-button {

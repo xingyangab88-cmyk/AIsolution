@@ -283,7 +283,7 @@ const InteractionSettings = ({ mediaType, creatorInfo, interactions, setInteract
           <label
             key={item.key}
             className={`tiktok-check-row ${item.disabled ? 'is-disabled' : ''}`}
-            title={item.disabled ? 'Turned off in your TikTok account settings.' : undefined}
+            data-tooltip={item.disabled ? 'Turned off in your TikTok account settings.' : undefined}
           >
             <input
               className="h-5 w-5 rounded border-white/20 bg-slate-950 text-cyan-300"
