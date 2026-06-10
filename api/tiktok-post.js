@@ -38,6 +38,7 @@ export default async function handler(request, response) {
     brandOrganicToggle = false,
     brandContentToggle = false,
     isAigc = false,
+    autoAddMusic = false,
     mediaType = 'video',
   } = request.body || {};
 
@@ -87,6 +88,7 @@ export default async function handler(request, response) {
           aigc_info: {
             aigc_label_type: isAigc ? 'AIGC_GENERIC' : 'UNDISCLOSED',
           },
+          ...(isPhoto && { auto_add_music: Boolean(autoAddMusic) }),
         },
         source_info: sourceInfo,
       }

@@ -242,7 +242,7 @@ const PrivacySelector = ({ options, value, setValue, error, brandedContentSelect
       value={value}
       onChange={(event) => setValue(event.target.value)}
     >
-      <option value="">Select privacy</option>
+      <option value="">Select who can view this post</option>
       {options.map((option) => (
         <option
           key={option}
@@ -269,7 +269,12 @@ const InteractionSettings = ({ mediaType, creatorInfo, interactions, setInteract
     { key: 'allowComments', label: 'Allow comments', disabled: creatorInfo.comment_disabled },
     { key: 'allowDuet', label: 'Allow duet', disabled: creatorInfo.duet_disabled, videoOnly: true },
     { key: 'allowStitch', label: 'Allow stitch', disabled: creatorInfo.stitch_disabled, videoOnly: true },
-  ].filter((item) => mediaType === 'video' || !item.videoOnly);
+    { key: 'autoAddMusic', label: 'Auto-add music', photoOnly: true },
+  ].filter((item) => {
+    if (item.videoOnly && mediaType !== 'video') return false;
+    if (item.photoOnly && mediaType !== 'photo') return false;
+    return true;
+  });
 
   return (
     <Section icon={Sparkles} title="Interaction settings">
@@ -278,6 +283,7 @@ const InteractionSettings = ({ mediaType, creatorInfo, interactions, setInteract
           <label
             key={item.key}
             className={`tiktok-check-row ${item.disabled ? 'is-disabled' : ''}`}
+            title={item.disabled ? 'Turned off in your TikTok account settings.' : undefined}
           >
             <input
               className="h-5 w-5 rounded border-white/20 bg-slate-950 text-cyan-300"
@@ -388,6 +394,7 @@ const PostToTikTok = () => {
     allowComments: false,
     allowDuet: false,
     allowStitch: false,
+    autoAddMusic: false,
   });
   const [disclosure, setDisclosure] = useState({
     promotesContent: false,
@@ -494,6 +501,7 @@ const PostToTikTok = () => {
         allowComments: !creatorInfo.comment_disabled && interactions.allowComments,
         allowDuet: mediaType === 'video' && !creatorInfo.duet_disabled && interactions.allowDuet,
         allowStitch: mediaType === 'video' && !creatorInfo.stitch_disabled && interactions.allowStitch,
+        autoAddMusic: mediaType === 'photo' && interactions.autoAddMusic,
         promotesContent: disclosure.promotesContent,
         yourBrand: disclosure.yourBrand,
         brandedContent: disclosure.brandedContent,
@@ -662,6 +670,9 @@ const PostToTikTok = () => {
                   </p>
                   {publishStatus?.status && (
                     <p className="mt-2 text-sm text-cyan-100">TikTok status: {publishStatus.status}</p>
+                  )}
+                  {publishStatus?.publicly_available_post_id?.[0] && (
+                    <p className="mt-2 text-sm text-cyan-100">Post ID: {publishStatus.publicly_available_post_id[0]}</p>
                   )}
                   {publishStatus?.fail_reason && (
                     <p className="mt-2 text-sm text-red-200">Reason: {publishStatus.fail_reason}</p>
