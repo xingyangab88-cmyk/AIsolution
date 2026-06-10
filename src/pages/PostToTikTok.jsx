@@ -671,8 +671,8 @@ const PostToTikTok = () => {
                   {publishStatus?.status && (
                     <p className="mt-2 text-sm text-cyan-100">TikTok status: {publishStatus.status}</p>
                   )}
-                  {publishStatus?.publicly_available_post_id?.[0] && (
-                    <p className="mt-2 text-sm text-cyan-100">Post ID: {publishStatus.publicly_available_post_id[0]}</p>
+                  {publishStatus?.publicaly_available_post_id?.[0] && (
+                    <p className="mt-2 text-sm text-cyan-100">Post ID: {publishStatus.publicaly_available_post_id[0]}</p>
                   )}
                   {publishStatus?.fail_reason && (
                     <p className="mt-2 text-sm text-red-200">Reason: {publishStatus.fail_reason}</p>
