@@ -121,3 +121,37 @@ export const publishTikTokPost = async ({
 
   return data;
 };
+
+export const fetchTikTokUserStats = async () => {
+  const response = await fetch('/api/tiktok-user-stats', {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+  const data = await readJsonResponse(response);
+
+  if (!response.ok || data.ok === false) {
+    throw new Error(data.message || data.error || 'Unable to load TikTok user stats');
+  }
+
+  return data.stats;
+};
+
+export const fetchTikTokVideos = async (cursor = null, maxCount = 10) => {
+  const response = await fetch('/api/tiktok-videos', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ cursor, max_count: maxCount }),
+  });
+  const data = await readJsonResponse(response);
+
+  if (!response.ok || data.ok === false) {
+    throw new Error(data.message || data.error || 'Unable to load TikTok videos');
+  }
+
+  return data.data;
+};

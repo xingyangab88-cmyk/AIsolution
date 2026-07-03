@@ -12,11 +12,15 @@ import {
   Send,
   Sparkles,
   UserRound,
+  BarChart2,
+  Video,
 } from 'lucide-react';
 import {
   fetchTikTokCreatorInfo,
   fetchTikTokPostStatus,
   publishTikTokPost,
+  fetchTikTokUserStats,
+  fetchTikTokVideos,
 } from '../lib/tiktokPostingApi';
 import './PostToTikTok.css';
 
@@ -382,6 +386,103 @@ const CommercialDisclosure = ({ disclosure, setDisclosure, error, privacy }) => 
   );
 };
 
+const CreatorAnalytics = ({ creatorInfo, active }) => {
+  const [stats, setStats] = useState(null);
+  const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!creatorInfo || !active) return;
+    
+    let isMounted = true;
+    setLoading(true);
+
+    Promise.all([
+      fetchTikTokUserStats(),
+      fetchTikTokVideos(null, 5)
+    ]).then(([statsData, videosData]) => {
+      if (isMounted) {
+        setStats(statsData);
+        setVideos(videosData?.videos || []);
+        setLoading(false);
+      }
+    }).catch(err => {
+      if (isMounted) {
+        setError('Requires user.info.stats and video.list scopes to load analytics. Re-connect TikTok.');
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [creatorInfo, active]);
+
+  if (!creatorInfo) return null;
+
+  return (
+    <div className="tiktok-card">
+      <div className="tiktok-card-title">
+        <div className="tiktok-card-icon">
+          <BarChart2 size={20} />
+        </div>
+        <h2 className="text-lg font-semibold text-white">Creator Analytics</h2>
+      </div>
+      
+      {loading ? (
+        <div className="animate-pulse flex gap-4">
+          <div className="h-16 w-24 bg-white/10 rounded"></div>
+          <div className="h-16 w-24 bg-white/10 rounded"></div>
+          <div className="h-16 w-24 bg-white/10 rounded"></div>
+        </div>
+      ) : error ? (
+        <div className="text-amber-300/80 text-sm bg-amber-400/10 p-3 rounded">{error}</div>
+      ) : (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-slate-800/50 p-4 rounded-lg border border-white/5">
+              <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Followers</p>
+              <p className="text-2xl font-bold text-white">{stats?.follower_count?.toLocaleString() || 0}</p>
+            </div>
+            <div className="bg-slate-800/50 p-4 rounded-lg border border-white/5">
+              <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Likes</p>
+              <p className="text-2xl font-bold text-white">{stats?.likes_count?.toLocaleString() || 0}</p>
+            </div>
+            <div className="bg-slate-800/50 p-4 rounded-lg border border-white/5">
+              <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Following</p>
+              <p className="text-2xl font-bold text-white">{stats?.following_count?.toLocaleString() || 0}</p>
+            </div>
+            <div className="bg-slate-800/50 p-4 rounded-lg border border-white/5">
+              <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Videos</p>
+              <p className="text-2xl font-bold text-white">{stats?.video_count?.toLocaleString() || 0}</p>
+            </div>
+          </div>
+          
+          {videos.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                <Video size={16} /> Recent Videos
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {videos.map(video => (
+                  <div key={video.id} className="relative aspect-[9/16] bg-slate-900 rounded overflow-hidden border border-white/10 group">
+                    <img src={video.cover_image_url} alt={video.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-2">
+                      <p className="text-white text-xs font-medium truncate">{video.title}</p>
+                      <p className="text-cyan-300 text-[10px]">{video.view_count?.toLocaleString()} views</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const PostToTikTok = () => {
   const [creatorInfo, setCreatorInfo] = useState(null);
   const [creatorLoading, setCreatorLoading] = useState(true);
@@ -599,6 +700,7 @@ const PostToTikTok = () => {
                 window.location.href = '/api/tiktok-login';
               }}
             />
+            <CreatorAnalytics creatorInfo={creatorInfo} active={true} />
             <VideoPreview
               file={file}
               previewUrl={previewUrl}
