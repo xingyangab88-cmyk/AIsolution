@@ -1,7 +1,7 @@
 /* global process */
 
 const REDIRECT_URI = 'https://solarkhmer.vercel.app/callback';
-const requestedScopes = 'user.info.basic,video.upload,video.publish,user.info.stats,video.list';
+const requestedScopes = 'user.info.basic,video.upload,video.publish';
 
 export default async function handler(request, response) {
   response.setHeader('Cache-Control', 'no-store');
